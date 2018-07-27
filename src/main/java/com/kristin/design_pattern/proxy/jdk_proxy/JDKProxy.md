@@ -20,9 +20,11 @@ Interface : java.lang.reflect.InvocationHandler
 
 #### 4.2代理步骤
 <p>1.Proxy.newProxyInstance(ClassLoader loader,Class<?>[] interfaces,InvocationHandler h)</p>
-<p>loader : 类加载器</p>
-<p>interfaces : 目标对象实现的接口</p>
-<p>h : InvocationHandler的实现类</p>
+方法参数:
+
+1. loader : 类加载器
+2. interfaces : 目标对象实现的接口
+3. h : InvocationHandler的实现类
 
 以下是Proxy.java的newProxyInstance方法
 
