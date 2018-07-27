@@ -16,6 +16,7 @@ Java 动态代理机制的出现，使得 Java 开发人员不用手工编写代
 
 #### 4.1相关的类和接口
 Class : java.lang.reflect.Proxy
+
 Interface : java.lang.reflect.InvocationHandler
 
 #### 4.2代理步骤
@@ -392,7 +393,7 @@ private void addProxyMethod(Method var1, Class<?> var2) {
 通过下面这个设置,可以将代理类字节码文件保存到项目根目录下的com.sun.proxy文件夹中看到$Proxy.class
 `System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");`
 
-下面我们看一看$Proxy.class
+下面我们看一看$Proxy0.class
 
 ```java
 package com.sun.proxy;
@@ -480,4 +481,5 @@ public final class $Proxy0 extends Proxy implements UserDao {
 <p>JDK动态代理的基本原理就是 我们定义好接口和默认实现，JDK根据通过生成class文件的方式”动态”的生成一个代理类，这个代理类实现了我们定义的接口，并在接口实现方法中回调了我们通过InvocationHandler定义的处理流程，这个处理流程中我们回去调用默认实现，并提供增强。</p>
 
  https://www.cnblogs.com/MOBIN/p/5597215.html
+
  https://since1986.github.io/blog/bf178159.html
