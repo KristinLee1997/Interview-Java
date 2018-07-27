@@ -27,7 +27,7 @@ Interface : java.lang.reflect.InvocationHandler
 以下是Proxy.java的newProxyInstance方法
 
 ```java
-    public static Object newProxyInstance(ClassLoader loader,
+public static Object newProxyInstance(ClassLoader loader,
                                           Class<?>[] interfaces,
                                           InvocationHandler h)
         throws IllegalArgumentException
@@ -81,5 +81,122 @@ Interface : java.lang.reflect.InvocationHandler
     }
 ```
 
+ 以下是Proxy类的getProxyClass0方法, 生成代理类
+ 
+```java
+private static Class<?> getProxyClass0(ClassLoader loader,
+                                           Class<?>... interfaces) {
+        //接口数不能超过65535
+        if (interfaces.length > 65535) {
+            throw new IllegalArgumentException("interface limit exceeded");
+        }
+        //如果缓存中有代理类就直接返回,否则由ProxyClassFactory生成
+        return proxyClassCache.get(loader, interfaces);
+    }
+```
+
+以下是Proxy的内部类ProxyClassFactory,看看ProxyClassFactory是怎样生成的代理类
+```java
+/**
+ * A factory function that generates, defines and returns the proxy class given
+ * the ClassLoader and array of interfaces.
+ */
+private static final class ProxyClassFactory
+	implements BiFunction<ClassLoader, Class<?>[], Class<?>>
+{
+	// 所有代理类的名称前缀为"$Proxy"
+	private static final String proxyClassNamePrefix = "$Proxy";
+
+	// 使用唯一的编号作为代理类名称的一部分
+	private static final AtomicLong nextUniqueNumber = new AtomicLong();
+
+	@Override
+	public Class<?> apply(ClassLoader loader, Class<?>[] interfaces) {
+
+		Map<Class<?>, Boolean> interfaceSet = new IdentityHashMap<>(interfaces.length);
+		for (Class<?> intf : interfaces) {
+			/*
+			 * 验证指定类加载器加载的Class对象是否与intf加载的Class对象相同
+			 */
+			Class<?> interfaceClass = null;
+			try {
+				interfaceClass = Class.forName(intf.getName(), false, loader);
+			} catch (ClassNotFoundException e) {
+			}
+			if (interfaceClass != intf) {
+				throw new IllegalArgumentException(
+					intf + " is not visible from class loader");
+			}
+			/*
+			 * 验证Class对象是否是一个接口
+			 */
+			if (!interfaceClass.isInterface()) {
+				throw new IllegalArgumentException(
+					interfaceClass.getName() + " is not an interface");
+			}
+			/*
+			 * 验证该接口是否重复
+			 */
+			if (interfaceSet.put(interfaceClass, Boolean.TRUE) != null) {
+				throw new IllegalArgumentException(
+					"repeated interface: " + interfaceClass.getName());
+			}
+		}
+
+		String proxyPkg = null;     // 声明代理类所在包
+		int accessFlags = Modifier.PUBLIC | Modifier.FINAL;
+
+		/*
+		 * 验证传入的接口是否为非public的,保证非public接口的代理类将被定义在同一个包中
+		 */
+		for (Class<?> intf : interfaces) {
+			int flags = intf.getModifiers();
+			if (!Modifier.isPublic(flags)) {
+				accessFlags = Modifier.FINAL;
+				String name = intf.getName();
+				int n = name.lastIndexOf('.');
+				String pkg = ((n == -1) ? "" : name.substring(0, n + 1)); //截取完整的包名
+				if (proxyPkg == null) {
+					proxyPkg = pkg;
+				} else if (!pkg.equals(proxyPkg)) {
+					throw new IllegalArgumentException(
+						"non-public interfaces from different packages");
+				}
+			}
+		}
+		
+		if (proxyPkg == null) {
+			// 如果没有非public接口,那么这些代理类都放在com.sun.proxy包中
+			proxyPkg = ReflectUtil.PROXY_PACKAGE + ".";
+		}
+
+		/*
+		 * 将nextUniqueNumber通过cas加1,对proxy类名编号进行generate,初始为1
+		 */
+		long num = nextUniqueNumber.getAndIncrement();
+		String proxyName = proxyPkg + proxyClassNamePrefix + num;      //代理类的全限定名,如com.sun.proxy.$Proxy0.calss,
+
+		/*
+		 * 生成代理类的字节码文件
+		 */
+		byte[] proxyClassFile = ProxyGenerator.generateProxyClass(
+			proxyName, interfaces, accessFlags);
+		try {
+			return defineClass0(loader, proxyName,
+								proxyClassFile, 0, proxyClassFile.length);
+		} catch (ClassFormatError e) {
+			/*
+			 * A ClassFormatError here means that (barring bugs in the
+			 * proxy class generation code) there was some other
+			 * invalid aspect of the arguments supplied to the proxy
+			 * class creation (such as virtual machine limitations
+			 * exceeded).
+			 */
+			throw new IllegalArgumentException(e.toString());
+		}
+	}
+}
+
+```
  
  
