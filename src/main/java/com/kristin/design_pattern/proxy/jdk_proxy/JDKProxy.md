@@ -480,6 +480,37 @@ public final class $Proxy0 extends Proxy implements UserDao {
 #### in all:
 <p>JDK动态代理的基本原理就是 我们定义好接口和默认实现，JDK根据通过生成class文件的方式”动态”的生成一个代理类，这个代理类实现了我们定义的接口，并在接口实现方法中回调了我们通过InvocationHandler定义的处理流程，这个处理流程中我们回去调用默认实现，并提供增强。</p>
 
+#### 不足
+JDK动态代理只能代理实现了接口的类,而Cglib动态代理可以代理没有实现接口的类
+
+#### JDK vs CGLIB
+JDK动态代理和CGLIB字节码生成的区别？
+
+ (1)JDK动态代理只能对实现了接口的类生成代理，而不能针对类
+
+ (2)CGLIB是针对类实现代理，主要是对指定的类生成一个子类，覆盖其中的方法
+   因为是继承，所以该类或方法最好不要声明成final
+
+结论
+
+1.同样情况下,cglib两种实现方式，invokeSuper + setSuperClass 永远比 invoke + setInterfaces慢
+
+2.cglib invoke + setInterfaces 在方法数量较少的时候,在函数平均调用的情况下 比jdkProxy快,随着函数增多，优势越来越不明显,到达某个数量级一定比jdk动态代理慢
+
+3.cglib invoke + setInterfaces 在调用特定函数(在switch中靠后的case) 会比jdk动态代理慢
+
+
+思考
+
+cglib的瓶颈在于:
+调用net.sf.cglib.reflect.FastClass#invoke(int, java.lang.Object, java.lang.Object[])时需要switch的case:
+如果有n个函数，那么就要一个个比较，复杂度O(n)
+这里如果有一个key -> behavior的映射就好了，目前并没有。
+如果可以用asm在这里写成一个二分搜索，cglib就会快多了,变成O(log2 n)，时间上就是一个飞跃，只不过这个fastclass就会看起来很丑。（目前最新3.2.5的版本也没有改动这一块）
+
+参考:
  https://www.cnblogs.com/MOBIN/p/5597215.html
 
  https://since1986.github.io/blog/bf178159.html
+
+ https://www.jianshu.com/p/1aaacf92e2cd
