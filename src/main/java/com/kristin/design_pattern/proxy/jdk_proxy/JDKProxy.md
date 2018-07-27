@@ -356,5 +356,38 @@ private byte[] generateClassFile() {
 }
 ```
 
+是怎样将Object方法添加到代理类容器的呢?下面我们看一看sun.misc.ProxyGenerator中的addProxyMethod方法
+```java
+private void addProxyMethod(Method var1, Class<?> var2) {
+	String var3 = var1.getName();	// 方法名
+	Class[] var4 = var1.getParameterTypes();	// 方法参数类型
+	Class var5 = var1.getReturnType();	// 方法返回值类型
+	Class[] var6 = var1.getExceptionTypes();	// 方法异常类型
+	String var7 = var3 + getParameterDescriptors(var4);	// 方法签名
+	Object var8 = (List)this.proxyMethods.get(var7);	//根据方法签名获得方法对象
+	if (var8 != null) {	// 处理多个代理接口中的重复方法
+		Iterator var9 = ((List)var8).iterator();
+
+		while(var9.hasNext()) {
+			ProxyGenerator.ProxyMethod var10 = (ProxyGenerator.ProxyMethod)var9.next();
+			if (var5 == var10.returnType) {
+				ArrayList var11 = new ArrayList();
+				collectCompatibleTypes(var6, var10.exceptionTypes, var11);
+				collectCompatibleTypes(var10.exceptionTypes, var6, var11);
+				var10.exceptionTypes = new Class[var11.size()];
+				var10.exceptionTypes = (Class[])var11.toArray(var10.exceptionTypes);
+				return;
+			}
+		}
+	} else {
+		var8 = new ArrayList(3);
+		this.proxyMethods.put(var7, var8);
+	}
+
+	((List)var8).add(new ProxyGenerator.ProxyMethod(var3, var4, var5, var6, var2, null));
+}
+```
+
+
 
  
