@@ -17,13 +17,13 @@ public class Printer implements Printable {
     }
 
     @Override
-    public void setPrinterName(String name) {
-        this.name = name;
+    public String getPrinterName() {
+        return this.name;
     }
 
     @Override
-    public String getPrinterName() {
-        return this.name;
+    public void setPrinterName(String name) {
+        this.name = name;
     }
 
     @Override

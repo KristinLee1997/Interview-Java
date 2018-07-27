@@ -13,16 +13,16 @@ public class PrinterProxy implements Printable {
     }
 
     @Override
+    public String getPrinterName() {
+        return this.name;
+    }
+
+    @Override
     public synchronized void setPrinterName(String name) {
         if (real != null) {
             real.setPrinterName(name);
         }
         this.name = name;
-    }
-
-    @Override
-    public String getPrinterName() {
-        return this.name;
     }
 
     @Override

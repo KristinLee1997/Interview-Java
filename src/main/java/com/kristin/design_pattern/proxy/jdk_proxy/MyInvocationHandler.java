@@ -22,7 +22,7 @@ public class MyInvocationHandler implements InvocationHandler {
      *
      * @param target
      */
-    public void setProxy(Object target) {
+    public MyInvocationHandler(Object target) {
         this.target = target;
     }
 
