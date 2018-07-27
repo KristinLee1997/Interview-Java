@@ -25,8 +25,9 @@ Interface : java.lang.reflect.InvocationHandler
 <p>h : InvocationHandler的实现类</p>
 
 以下是Proxy.java的newProxyInstance方法
-```java_holder_method_tree
-@CallerSensitive
+
+```java
+public class Proxy{
     public static Object newProxyInstance(ClassLoader loader,
                                           Class<?>[] interfaces,
                                           InvocationHandler h)
@@ -79,6 +80,8 @@ Interface : java.lang.reflect.InvocationHandler
             throw new InternalError(e.toString(), e);
         }
     }
+}
 ```
+
  
  
