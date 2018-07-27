@@ -116,7 +116,7 @@ private static final class ProxyClassFactory
     @Override
     public Class<?> apply(ClassLoader loader, Class<?>[] interfaces) {
 
-        Map<Class<?>, Boolean> interfaceSet = new IdentityHashMap<>(interfaces.length);
+        Map<Class<?>, Boolean> interfaceSet = new IdentityMyMyHashMap<>(interfaces.length);
         for (Class<?> intf : interfaces) {
             /*
              * 验证指定类加载器加载的Class对象是否与intf加载的Class对象相同
