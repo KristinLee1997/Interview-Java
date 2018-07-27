@@ -27,7 +27,6 @@ Interface : java.lang.reflect.InvocationHandler
 以下是Proxy.java的newProxyInstance方法
 
 ```java
-public class Proxy{
     public static Object newProxyInstance(ClassLoader loader,
                                           Class<?>[] interfaces,
                                           InvocationHandler h)
@@ -80,7 +79,6 @@ public class Proxy{
             throw new InternalError(e.toString(), e);
         }
     }
-}
 ```
 
  
