@@ -1,5 +1,7 @@
 # Spring IOC 原理
 手写Spring IOC demo : https://github.com/KristinLee1997/MyIOC
 
-![avatar](C:\Users\Administrator.SKY-20170408MML\IdeaProjects\Interview-Java\img\ApplicationContext.png)
+![BeanFactory](https://github.com/KristinLee1997/Interview-Java/raw/master/img/BeanFactory.png)
+
+![ApplicationContext](https://github.com/KristinLee1997/Interview-Java/raw/master/img/ApplicationContext.png)
 
