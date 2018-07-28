@@ -157,3 +157,5 @@ newCap = oldCap << 1
 举例说明：resize()之前为低x-1位为Index，resize()之后为低x位为Index
 则所有Entry中，hash值第x位为0的，不需要哈希到新位置，只需要呆在当前索引下的新位置j
 hash值第x位为1的，需要哈希到新位置，新位置为j+oldCap
+
+https://javadoop.com/post/hashmap#Java8%20HashMap
