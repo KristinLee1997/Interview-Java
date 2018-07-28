@@ -144,3 +144,16 @@ static final int tableSizeFor(int cap) {
 ```
 
 ###### resize()
+1. 计算扩容后的容量，临界值。
+2. 将hashMap的临界值修改为扩容后的临界值
+3. 根据扩容后的容量新建数组，然后将hashMap的table的引用指向新数组。
+4. 将旧数组的元素复制到table中。
+
+resize()方法的改进:
+由于JDK1.8更新了hash方法,index时只需要hash&(length-1),所以扩容时就每个元素不需要重新计算hash值,原因如下:
+新表索引：hash & (newCap - 1)---》低x位为Index
+旧表索引：hash & (oldCap - 1)---》低x-1位为Index
+newCap = oldCap << 1
+举例说明：resize()之前为低x-1位为Index，resize()之后为低x位为Index
+则所有Entry中，hash值第x位为0的，不需要哈希到新位置，只需要呆在当前索引下的新位置j
+hash值第x位为1的，需要哈希到新位置，新位置为j+oldCap
