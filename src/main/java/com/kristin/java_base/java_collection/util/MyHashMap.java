@@ -501,54 +501,80 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * @return the table
      */
     final Node<K, V>[] resize() {
+        //新建oldTab数组保存扩容前的数组table
         Node<K, V>[] oldTab = table;
+        //获取原来数组的长度
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        //原来数组扩容的临界值
         int oldThr = threshold;
         int newCap, newThr = 0;
+        //如果扩容前的容量 > 0
         if (oldCap > 0) {
+            //如果原来的数组长度大于最大值(2^30)
             if (oldCap >= MAXIMUM_CAPACITY) {
+                //扩容临界值提高到正无穷
                 threshold = Integer.MAX_VALUE;
+                //无法进行扩容，返回原来的数组
                 return oldTab;
+                //如果现在容量的两倍小于MAXIMUM_CAPACITY且现在的容量大于DEFAULT_INITIAL_CAPACITY
             } else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
                     oldCap >= DEFAULT_INITIAL_CAPACITY)
-                newThr = oldThr << 1; // double threshold
-        } else if (oldThr > 0) // initial capacity was placed in threshold
+                //临界值变为原来的2倍
+                newThr = oldThr << 1;
+        } else if (oldThr > 0) //如果旧容量 <= 0，而且旧临界值 > 0
+            //数组的新容量设置为老数组扩容的临界值
             newCap = oldThr;
-        else {               // zero initial threshold signifies using defaults
-            newCap = DEFAULT_INITIAL_CAPACITY;
-            newThr = (int) (DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        else { //如果旧容量 <= 0，且旧临界值 <= 0，新容量扩充为默认初始化容量，新临界值为DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY
+            newCap = DEFAULT_INITIAL_CAPACITY;//新数组初始容量设置为默认值
+            newThr = (int) (DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);//计算默认容量下的阈值
         }
-        if (newThr == 0) {
+        // 计算新的resize上限
+        if (newThr == 0) {//在当上面的条件判断中，只有oldThr > 0成立时，newThr == 0
+            //ft为临时临界值，下面会确定这个临界值是否合法，如果合法，那就是真正的临界值
             float ft = (float) newCap * loadFactor;
+            //当新容量< MAXIMUM_CAPACITY且ft < (float)MAXIMUM_CAPACITY，新的临界值为ft，否则为Integer.MAX_VALUE
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float) MAXIMUM_CAPACITY ?
                     (int) ft : Integer.MAX_VALUE);
         }
+        //将扩容后hashMap的临界值设置为newThr
         threshold = newThr;
+        //创建新的table，初始化容量为newCap
         @SuppressWarnings({"rawtypes", "unchecked"})
         Node<K, V>[] newTab = (Node<K, V>[]) new Node[newCap];
+        //修改hashMap的table为新建的newTab
         table = newTab;
+        //如果旧table不为空，将旧table中的元素复制到新的table中
         if (oldTab != null) {
+            //遍历旧哈希表的每个桶，将旧哈希表中的桶复制到新的哈希表中
             for (int j = 0; j < oldCap; ++j) {
                 Node<K, V> e;
+                //如果旧桶不为null，使用e记录旧桶
                 if ((e = oldTab[j]) != null) {
+                    //将旧桶置为null
                     oldTab[j] = null;
+                    //如果旧桶中只有一个node
                     if (e.next == null)
+                        //将e也就是oldTab[j]放入newTab中e.hash & (newCap - 1)的位置
                         newTab[e.hash & (newCap - 1)] = e;
+                        //如果旧桶中的结构为红黑树
                     else if (e instanceof TreeNode)
+                        //将树中的node分离
                         ((TreeNode<K, V>) e).split(this, newTab, j, oldCap);
-                    else { // preserve order
+                    else {  //如果旧桶中的结构为链表,链表重排，jdk1.8做的一系列优化
                         Node<K, V> loHead = null, loTail = null;
                         Node<K, V> hiHead = null, hiTail = null;
                         Node<K, V> next;
+                        //遍历整个链表中的节点
                         do {
                             next = e.next;
+                            // 原索引
                             if ((e.hash & oldCap) == 0) {
                                 if (loTail == null)
                                     loHead = e;
                                 else
                                     loTail.next = e;
                                 loTail = e;
-                            } else {
+                            } else {// 原索引+oldCap
                                 if (hiTail == null)
                                     hiHead = e;
                                 else
@@ -556,10 +582,12 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
                                 hiTail = e;
                             }
                         } while ((e = next) != null);
+                        // 原索引放到bucket里
                         if (loTail != null) {
                             loTail.next = null;
                             newTab[j] = loHead;
                         }
+                        // 原索引+oldCap放到bucket里
                         if (hiTail != null) {
                             hiTail.next = null;
                             newTab[j + oldCap] = hiHead;
