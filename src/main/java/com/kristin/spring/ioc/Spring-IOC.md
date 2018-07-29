@@ -3,6 +3,7 @@
 #### Spring容器核心类
 1. BeanFactory
 ![BeanFactory](https://github.com/KristinLee1997/Interview-Java/raw/master/img/BeanFactory.png)
+
 2. ApplicationContext
 ![ApplicationContext](https://github.com/KristinLee1997/Interview-Java/raw/master/img/ApplicationContext.png)
 
@@ -14,6 +15,7 @@
 Spring存在4种基本的标签`<bean>,<import>,<alias>,<beans>`
 对`<bean>` 的加载步骤:
 1. 首先委托BeanDefinitionDelegate类的parseBeanDefinitionElement方法进行元素解析返回BeanDefinitionHolder类型的实例bdHolder,经过这个方法后,bdHolder实例已经包含我们配置文件中配置的各种属性了,例如class,name,id,alias之类的属性
+     ###### 解析`<bean>`
     - 1.提取元素中的id及name属性;
     - 2.进一步解析其他所有属性并统一封装至GenericBeanDefinition类型的实例中;
     - 3.如果检测到bean没有指定beanName,那么使用默认的规则为此Bean生成beanName;
