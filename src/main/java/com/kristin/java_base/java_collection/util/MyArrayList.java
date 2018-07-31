@@ -951,7 +951,7 @@ public class MyArrayList<E> extends AbstractList<E>
             rangeCheckForAdd(index);
             checkForComodification();
             parent.add(parentOffset + index, e);
-            this.modCount = parent.modCount;
+//            this.modCount = parent.modCount;
             this.size++;
         }
 
@@ -959,16 +959,16 @@ public class MyArrayList<E> extends AbstractList<E>
             rangeCheck(index);
             checkForComodification();
             E result = parent.remove(parentOffset + index);
-            this.modCount = parent.modCount;
+//            this.modCount = parent.modCount;
             this.size--;
             return result;
         }
 
         protected void removeRange(int fromIndex, int toIndex) {
             checkForComodification();
-            parent.removeRange(parentOffset + fromIndex,
-                    parentOffset + toIndex);
-            this.modCount = parent.modCount;
+//            parent.removeRange(parentOffset + fromIndex,
+//                    parentOffset + toIndex);
+//            this.modCount = parent.modCount;
             this.size -= toIndex - fromIndex;
         }
 
@@ -984,7 +984,7 @@ public class MyArrayList<E> extends AbstractList<E>
 
             checkForComodification();
             parent.addAll(parentOffset + index, c);
-            this.modCount = parent.modCount;
+//            this.modCount = parent.modCount;
             this.size += cSize;
             return true;
         }
