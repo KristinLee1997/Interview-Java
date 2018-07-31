@@ -13,7 +13,9 @@ import java.util.function.Function;
 
 /**
  * @author Kristin
+ * @see HashMap
  * @since 2018/7/27 22:36
+ * 这是一个可以运行的类
  **/
 public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         implements Map<K, V>, Cloneable, Serializable {
