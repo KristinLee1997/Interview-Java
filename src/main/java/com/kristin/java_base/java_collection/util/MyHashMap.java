@@ -20,14 +20,11 @@ import java.util.function.Function;
 public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         implements Map<K, V>, Cloneable, Serializable {
 
-    private static final long serialVersionUID = 362498820763181265L;
-
     /**
      * The default initial capacity - MUST be a power of two.
      * 默认的初始容量是16
      */
     static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
-
     /**
      * The maximum capacity, used if a higher value is implicitly specified
      * by either of the constructors with arguments.
@@ -35,13 +32,11 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * 最大容量为2^30
      */
     static final int MAXIMUM_CAPACITY = 1 << 30;
-
     /**
      * The load factor used when none specified in constructor.
      * 默认的填充因子
      */
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
-
     /**
      * The bin count threshold for using a tree rather than list for a
      * bin.  Bins are converted to trees when adding an element to a
@@ -52,7 +47,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * 当桶(bucket)上的结点数大于TREEIFY_THRESHOLD时会转成红黑树
      */
     static final int TREEIFY_THRESHOLD = 8;
-
     /**
      * The bin count threshold for untreeifying a (split) bin during a
      * resize operation. Should be less than TREEIFY_THRESHOLD, and at
@@ -60,7 +54,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * 当桶(bucket)上的结点数小于UNTREEIFY_THRESHOLD时树转链表
      */
     static final int UNTREEIFY_THRESHOLD = 6;
-
     /**
      * The smallest table capacity for which bins may be treeified.
      * (Otherwise the table is resized if too many nodes in a bin.)
@@ -69,136 +62,16 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * 桶中结构转化为红黑树对应的数组的最小容量，如果当前容量小于它，就不会将链表转化为红黑树，而是用resize()代替
      */
     static final int MIN_TREEIFY_CAPACITY = 64;
-
+    private static final long serialVersionUID = 362498820763181265L;
     /**
-     * Basic hash bin node, used for most entries.  (See below for
-     * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
+     * The load factor for the hash table.
+     * 填充因子
+     *
+     * @serial
      */
-    static class Node<K, V> implements Map.Entry<K, V> {
-        final int hash;
-        final K key;
-        V value;
-        Node<K, V> next;
-
-        Node(int hash, K key, V value, Node<K, V> next) {
-            this.hash = hash;
-            this.key = key;
-            this.value = value;
-            this.next = next;
-        }
-
-        public final K getKey() {
-            return key;
-        }
-
-        public final V getValue() {
-            return value;
-        }
-
-        public final String toString() {
-            return key + "=" + value;
-        }
-
-        public final int hashCode() {
-            return Objects.hashCode(key) ^ Objects.hashCode(value);
-        }
-
-        public final V setValue(V newValue) {
-            V oldValue = value;
-            value = newValue;
-            return oldValue;
-        }
-
-        public final boolean equals(Object o) {
-            if (o == this)
-                return true;
-            if (o instanceof Map.Entry) {
-                Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
-                if (Objects.equals(key, e.getKey()) &&
-                        Objects.equals(value, e.getValue()))
-                    return true;
-            }
-            return false;
-        }
-    }
+    final float loadFactor;
 
     /* ---------------- Static utilities -------------- */
-
-    /**
-     * Computes key.hashCode() and spreads (XORs) higher bits of hash
-     * to lower.  Because the table uses power-of-two masking, sets of
-     * hashes that vary only in bits above the current mask will
-     * always collide. (Among known examples are sets of Float keys
-     * holding consecutive whole numbers in small tables.)  So we
-     * apply a transform that spreads the impact of higher bits
-     * downward. There is a tradeoff between speed, utility, and
-     * quality of bit-spreading. Because many common sets of hashes
-     * are already reasonably distributed (so don't benefit from
-     * spreading), and because we use trees to handle large sets of
-     * collisions in bins, we just XOR some shifted bits in the
-     * cheapest possible way to reduce systematic lossage, as well as
-     * to incorporate impact of the highest bits that would otherwise
-     * never be used in index calculations because of table bounds.
-     * 如果直接使用key的hashcode()作为hash很容易发生碰撞。比如，在n - 1为15(0x1111)时，散列值真正生效的只是低4位。当新增的键的hashcode()是2，18，34这样恰好以16的倍数为差的等差数列，就产生了大量碰撞。
-     * 因此，设计者综合考虑了速度、作用、质量，把高16bit和低16bit进行了异或。因为现在大多数的hashCode的分布已经很不错了，就算是发生了较多碰撞也用O(logn)的红黑树去优化了。仅仅异或一下，既减少了系统的开销，也不会造成因为高位没有参与下标的计算(table长度比较小时)，从而引起的碰撞。
-     */
-    static final int hash(Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-    }
-
-    /**
-     * Returns x's Class if it is of the form "class C implements
-     * Comparable<C>", else null.
-     */
-    static Class<?> comparableClassFor(Object x) {
-        if (x instanceof Comparable) {
-            Class<?> c;
-            Type[] ts, as;
-            Type t;
-            ParameterizedType p;
-            if ((c = x.getClass()) == String.class) // bypass checks
-                return c;
-            if ((ts = c.getGenericInterfaces()) != null) {
-                for (int i = 0; i < ts.length; ++i) {
-                    if (((t = ts[i]) instanceof ParameterizedType) &&
-                            ((p = (ParameterizedType) t).getRawType() ==
-                                    Comparable.class) &&
-                            (as = p.getActualTypeArguments()) != null &&
-                            as.length == 1 && as[0] == c) // type arg is c
-                        return c;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns k.compareTo(x) if x matches kc (k's screened comparable
-     * class), else 0.
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"}) // for cast to Comparable
-    static int compareComparables(Class<?> kc, Object k, Object x) {
-        return (x == null || x.getClass() != kc ? 0 :
-                ((Comparable) k).compareTo(x));
-    }
-
-    /**
-     * Returns a power of two size for the given target capacity.
-     * tableSizeFor(initialCapacity)返回最近的不小于输入参数的2的整数次幂,比如10,就会返回16
-     */
-    static final int tableSizeFor(int cap) {
-        int n = cap - 1;
-        n |= n >>> 1;
-        n |= n >>> 2;
-        n |= n >>> 4;
-        n |= n >>> 8;
-        n |= n >>> 16;
-        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
-    }
-
-    /* ---------------- Fields -------------- */
-
     /**
      * The table, initialized on first use, and resized as
      * necessary. When allocated, length is always a power of two.
@@ -207,20 +80,17 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      * 存储元素的数组，总是2的幂
      */
     transient Node<K, V>[] table;
-
     /**
      * Holds cached entrySet(). Note that AbstractMap fields are used
      * for keySet() and values().
      * 存放具体元素的集
      */
     transient Set<Map.Entry<K, V>> entrySet;
-
     /**
      * The number of key-value mappings contained in this map.
      * 存放元素的个数，但是这个不等于数组的长度。
      */
     transient int size;
-
     /**
      * The number of times this HashMap has been structurally modified
      * Structural modifications are those that change the number of mappings in
@@ -231,6 +101,7 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
      */
     transient int modCount;
 
+    /* ---------------- Fields -------------- */
     /**
      * The next size value at which to resize (capacity * load factor).
      *
@@ -242,16 +113,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
     // DEFAULT_INITIAL_CAPACITY.)
     // 阈值 当实际节点个数超过阈值(容量*填充因子)时，会进行扩容
     int threshold;
-
-    /**
-     * The load factor for the hash table.
-     * 填充因子
-     *
-     * @serial
-     */
-    final float loadFactor;
-
-    /* ---------------- Public operations -------------- */
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the specified initial
@@ -311,6 +172,81 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
     public MyHashMap(Map<? extends K, ? extends V> m) {
         this.loadFactor = DEFAULT_LOAD_FACTOR; // 初始化填充因子
         putMapEntries(m, false);    // 将m中的所有元素添加至HashMap中
+    }
+
+    /**
+     * Computes key.hashCode() and spreads (XORs) higher bits of hash
+     * to lower.  Because the table uses power-of-two masking, sets of
+     * hashes that vary only in bits above the current mask will
+     * always collide. (Among known examples are sets of Float keys
+     * holding consecutive whole numbers in small tables.)  So we
+     * apply a transform that spreads the impact of higher bits
+     * downward. There is a tradeoff between speed, utility, and
+     * quality of bit-spreading. Because many common sets of hashes
+     * are already reasonably distributed (so don't benefit from
+     * spreading), and because we use trees to handle large sets of
+     * collisions in bins, we just XOR some shifted bits in the
+     * cheapest possible way to reduce systematic lossage, as well as
+     * to incorporate impact of the highest bits that would otherwise
+     * never be used in index calculations because of table bounds.
+     * 如果直接使用key的hashcode()作为hash很容易发生碰撞。比如，在n - 1为15(0x1111)时，散列值真正生效的只是低4位。当新增的键的hashcode()是2，18，34这样恰好以16的倍数为差的等差数列，就产生了大量碰撞。
+     * 因此，设计者综合考虑了速度、作用、质量，把高16bit和低16bit进行了异或。因为现在大多数的hashCode的分布已经很不错了，就算是发生了较多碰撞也用O(logn)的红黑树去优化了。仅仅异或一下，既减少了系统的开销，也不会造成因为高位没有参与下标的计算(table长度比较小时)，从而引起的碰撞。
+     */
+    static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    }
+
+    /* ---------------- Public operations -------------- */
+
+    /**
+     * Returns x's Class if it is of the form "class C implements
+     * Comparable<C>", else null.
+     */
+    static Class<?> comparableClassFor(Object x) {
+        if (x instanceof Comparable) {
+            Class<?> c;
+            Type[] ts, as;
+            Type t;
+            ParameterizedType p;
+            if ((c = x.getClass()) == String.class) // bypass checks
+                return c;
+            if ((ts = c.getGenericInterfaces()) != null) {
+                for (int i = 0; i < ts.length; ++i) {
+                    if (((t = ts[i]) instanceof ParameterizedType) &&
+                            ((p = (ParameterizedType) t).getRawType() ==
+                                    Comparable.class) &&
+                            (as = p.getActualTypeArguments()) != null &&
+                            as.length == 1 && as[0] == c) // type arg is c
+                        return c;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns k.compareTo(x) if x matches kc (k's screened comparable
+     * class), else 0.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"}) // for cast to Comparable
+    static int compareComparables(Class<?> kc, Object k, Object x) {
+        return (x == null || x.getClass() != kc ? 0 :
+                ((Comparable) k).compareTo(x));
+    }
+
+    /**
+     * Returns a power of two size for the given target capacity.
+     * tableSizeFor(initialCapacity)返回最近的不小于输入参数的2的整数次幂,比如10,就会返回16
+     */
+    static final int tableSizeFor(int cap) {
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
     /**
@@ -770,47 +706,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         return ks;
     }
 
-    final class KeySet extends AbstractSet<K> {
-        public final int size() {
-            return size;
-        }
-
-        public final void clear() {
-            MyHashMap.this.clear();
-        }
-
-        public final Iterator<K> iterator() {
-            return new KeyIterator();
-        }
-
-        public final boolean contains(Object o) {
-            return containsKey(o);
-        }
-
-        public final boolean remove(Object key) {
-            return removeNode(hash(key), key, null, false, true) != null;
-        }
-
-        public final Spliterator<K> spliterator() {
-            return new KeySpliterator<>(MyHashMap.this, 0, -1, 0, 0);
-        }
-
-        public final void forEach(Consumer<? super K> action) {
-            Node<K, V>[] tab;
-            if (action == null)
-                throw new NullPointerException();
-            if (size > 0 && (tab = table) != null) {
-                int mc = modCount;
-                for (int i = 0; i < tab.length; ++i) {
-                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
-                        action.accept(e.key);
-                }
-                if (modCount != mc)
-                    throw new ConcurrentModificationException();
-            }
-        }
-    }
-
     /**
      * Returns a {@link Collection} view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
@@ -835,43 +730,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         return vs;
     }
 
-    final class Values extends AbstractCollection<V> {
-        public final int size() {
-            return size;
-        }
-
-        public final void clear() {
-            MyHashMap.this.clear();
-        }
-
-        public final Iterator<V> iterator() {
-            return new ValueIterator();
-        }
-
-        public final boolean contains(Object o) {
-            return containsValue(o);
-        }
-
-        public final Spliterator<V> spliterator() {
-            return new ValueSpliterator<>(MyHashMap.this, 0, -1, 0, 0);
-        }
-
-        public final void forEach(Consumer<? super V> action) {
-            Node<K, V>[] tab;
-            if (action == null)
-                throw new NullPointerException();
-            if (size > 0 && (tab = table) != null) {
-                int mc = modCount;
-                for (int i = 0; i < tab.length; ++i) {
-                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
-                        action.accept(e.value);
-                }
-                if (modCount != mc)
-                    throw new ConcurrentModificationException();
-            }
-        }
-    }
-
     /**
      * Returns a {@link Set} view of the mappings contained in this map.
      * The set is backed by the map, so changes to the map are
@@ -892,60 +750,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         Set<Map.Entry<K, V>> es;
         return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
     }
-
-    final class EntrySet extends AbstractSet<Map.Entry<K, V>> {
-        public final int size() {
-            return size;
-        }
-
-        public final void clear() {
-            MyHashMap.this.clear();
-        }
-
-        public final Iterator<Map.Entry<K, V>> iterator() {
-            return new EntryIterator();
-        }
-
-        public final boolean contains(Object o) {
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
-            Object key = e.getKey();
-            Node<K, V> candidate = getNode(hash(key), key);
-            return candidate != null && candidate.equals(e);
-        }
-
-        public final boolean remove(Object o) {
-            if (o instanceof Map.Entry) {
-                Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
-                Object key = e.getKey();
-                Object value = e.getValue();
-                return removeNode(hash(key), key, value, true, true) != null;
-            }
-            return false;
-        }
-
-        public final Spliterator<Map.Entry<K, V>> spliterator() {
-            return new EntrySpliterator<>(MyHashMap.this, 0, -1, 0, 0);
-        }
-
-        public final void forEach(Consumer<? super Map.Entry<K, V>> action) {
-            Node<K, V>[] tab;
-            if (action == null)
-                throw new NullPointerException();
-            if (size > 0 && (tab = table) != null) {
-                int mc = modCount;
-                for (int i = 0; i < tab.length; ++i) {
-                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
-                        action.accept(e);
-                }
-                if (modCount != mc)
-                    throw new ConcurrentModificationException();
-            }
-        }
-    }
-
-    // Overrides of JDK8 Map extension methods
 
     @Override
     public V getOrDefault(Object key, V defaultValue) {
@@ -975,6 +779,8 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         }
         return false;
     }
+
+    // Overrides of JDK8 Map extension methods
 
     @Override
     public V replace(K key, V value) {
@@ -1212,9 +1018,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         }
     }
 
-    /* ------------------------------------------------------------ */
-    // Cloning and serialization
-
     /**
      * Returns a shallow copy of this <tt>MyHashMap</tt> instance: the keys and
      * values themselves are not cloned.
@@ -1268,6 +1071,9 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         internalWriteEntries(s);
     }
 
+    /* ------------------------------------------------------------ */
+    // Cloning and serialization
+
     /**
      * Reconstitute the {@code MyHashMap} instance from a stream (i.e.,
      * deserialize it).
@@ -1313,80 +1119,119 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         }
     }
 
+    // Create a regular (non-tree) node
+    Node<K, V> newNode(int hash, K key, V value, Node<K, V> next) {
+        return new Node<>(hash, key, value, next);
+    }
+
+    // For conversion from TreeNodes to plain nodes
+    Node<K, V> replacementNode(Node<K, V> p, Node<K, V> next) {
+        return new Node<>(p.hash, p.key, p.value, next);
+    }
+
+    // Create a tree bin node
+    TreeNode<K, V> newTreeNode(int hash, K key, V value, Node<K, V> next) {
+        return new TreeNode<>(hash, key, value, next);
+    }
+
+    // For treeifyBin
+    TreeNode<K, V> replacementTreeNode(Node<K, V> p, Node<K, V> next) {
+        return new TreeNode<>(p.hash, p.key, p.value, next);
+    }
+
     /* ------------------------------------------------------------ */
     // iterators
 
-    abstract class HashIterator {
-        Node<K, V> next;        // next entry to return
-        Node<K, V> current;     // current entry
-        int expectedModCount;  // for fast-fail
-        int index;             // current slot
-
-        HashIterator() {
-            expectedModCount = modCount;
-            Node<K, V>[] t = table;
-            current = next = null;
-            index = 0;
-            if (t != null && size > 0) { // advance to first entry
-                do {
-                } while (index < t.length && (next = t[index++]) == null);
-            }
-        }
-
-        public final boolean hasNext() {
-            return next != null;
-        }
-
-        final Node<K, V> nextNode() {
-            Node<K, V>[] t;
-            Node<K, V> e = next;
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            if (e == null)
-                throw new NoSuchElementException();
-            if ((next = (current = e).next) == null && (t = table) != null) {
-                do {
-                } while (index < t.length && (next = t[index++]) == null);
-            }
-            return e;
-        }
-
-        public final void remove() {
-            Node<K, V> p = current;
-            if (p == null)
-                throw new IllegalStateException();
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            current = null;
-            K key = p.key;
-            removeNode(hash(key), key, null, false, false);
-            expectedModCount = modCount;
-        }
+    /**
+     * Reset to initial default state.  Called by clone and readObject.
+     */
+    void reinitialize() {
+        table = null;
+        entrySet = null;
+        keySet = null;
+        values = null;
+        modCount = 0;
+        threshold = 0;
+        size = 0;
     }
 
-    final class KeyIterator extends HashIterator
-            implements Iterator<K> {
-        public final K next() {
-            return nextNode().key;
-        }
+    // Callbacks to allow LinkedHashMap post-actions
+    void afterNodeAccess(Node<K, V> p) {
     }
 
-    final class ValueIterator extends HashIterator
-            implements Iterator<V> {
-        public final V next() {
-            return nextNode().value;
-        }
+    void afterNodeInsertion(boolean evict) {
     }
 
-    final class EntryIterator extends HashIterator
-            implements Iterator<Map.Entry<K, V>> {
-        public final Map.Entry<K, V> next() {
-            return nextNode();
-        }
+    void afterNodeRemoval(Node<K, V> p) {
     }
 
     /* ------------------------------------------------------------ */
     // spliterators
+
+    // Called only from writeObject, to ensure compatible ordering.
+    void internalWriteEntries(java.io.ObjectOutputStream s) throws IOException {
+        Node<K, V>[] tab;
+        if (size > 0 && (tab = table) != null) {
+            for (int i = 0; i < tab.length; ++i) {
+                for (Node<K, V> e = tab[i]; e != null; e = e.next) {
+                    s.writeObject(e.key);
+                    s.writeObject(e.value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Basic hash bin node, used for most entries.  (See below for
+     * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
+     */
+    static class Node<K, V> implements Map.Entry<K, V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K, V> next;
+
+        Node(int hash, K key, V value, Node<K, V> next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+
+        public final K getKey() {
+            return key;
+        }
+
+        public final V getValue() {
+            return value;
+        }
+
+        public final String toString() {
+            return key + "=" + value;
+        }
+
+        public final int hashCode() {
+            return Objects.hashCode(key) ^ Objects.hashCode(value);
+        }
+
+        public final V setValue(V newValue) {
+            V oldValue = value;
+            value = newValue;
+            return oldValue;
+        }
+
+        public final boolean equals(Object o) {
+            if (o == this)
+                return true;
+            if (o instanceof Map.Entry) {
+                Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+                if (Objects.equals(key, e.getKey()) &&
+                        Objects.equals(value, e.getValue()))
+                    return true;
+            }
+            return false;
+        }
+    }
 
     static class HashMapSpliterator<K, V> {
         final MyHashMap<K, V> map;
@@ -1494,6 +1339,18 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
                     Spliterator.DISTINCT;
         }
     }
+
+    /* ------------------------------------------------------------ */
+    // LinkedHashMap support
+
+
+    /*
+     * The following package-protected methods are designed to be
+     * overridden by LinkedHashMap, but not by any other subclass.
+     * Nearly all other internal methods are also package-protected
+     * but are declared final, so can be used by LinkedHashMap, view
+     * classes, and HashSet.
+     */
 
     static final class ValueSpliterator<K, V>
             extends HashMapSpliterator<K, V>
@@ -1636,77 +1493,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
         }
     }
 
-    /* ------------------------------------------------------------ */
-    // LinkedHashMap support
-
-
-    /*
-     * The following package-protected methods are designed to be
-     * overridden by LinkedHashMap, but not by any other subclass.
-     * Nearly all other internal methods are also package-protected
-     * but are declared final, so can be used by LinkedHashMap, view
-     * classes, and HashSet.
-     */
-
-    // Create a regular (non-tree) node
-    Node<K, V> newNode(int hash, K key, V value, Node<K, V> next) {
-        return new Node<>(hash, key, value, next);
-    }
-
-    // For conversion from TreeNodes to plain nodes
-    Node<K, V> replacementNode(Node<K, V> p, Node<K, V> next) {
-        return new Node<>(p.hash, p.key, p.value, next);
-    }
-
-    // Create a tree bin node
-    TreeNode<K, V> newTreeNode(int hash, K key, V value, Node<K, V> next) {
-        return new TreeNode<>(hash, key, value, next);
-    }
-
-    // For treeifyBin
-    TreeNode<K, V> replacementTreeNode(Node<K, V> p, Node<K, V> next) {
-        return new TreeNode<>(p.hash, p.key, p.value, next);
-    }
-
-    /**
-     * Reset to initial default state.  Called by clone and readObject.
-     */
-    void reinitialize() {
-        table = null;
-        entrySet = null;
-        keySet = null;
-        values = null;
-        modCount = 0;
-        threshold = 0;
-        size = 0;
-    }
-
-    // Callbacks to allow LinkedHashMap post-actions
-    void afterNodeAccess(Node<K, V> p) {
-    }
-
-    void afterNodeInsertion(boolean evict) {
-    }
-
-    void afterNodeRemoval(Node<K, V> p) {
-    }
-
-    // Called only from writeObject, to ensure compatible ordering.
-    void internalWriteEntries(java.io.ObjectOutputStream s) throws IOException {
-        Node<K, V>[] tab;
-        if (size > 0 && (tab = table) != null) {
-            for (int i = 0; i < tab.length; ++i) {
-                for (Node<K, V> e = tab[i]; e != null; e = e.next) {
-                    s.writeObject(e.key);
-                    s.writeObject(e.value);
-                }
-            }
-        }
-    }
-
-    /* ------------------------------------------------------------ */
-    // Tree bins
-
     /**
      * Entry for Tree bins. Extends LinkedHashMap.Entry (which in turn
      * extends Node) so can be used as extension of either regular or
@@ -1721,17 +1507,6 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
 
         TreeNode(int hash, K key, V val, Node<K, V> next) {
             super(hash, key, val, next);
-        }
-
-        /**
-         * Returns root of tree containing this node.
-         */
-        final TreeNode<K, V> root() {
-            for (TreeNode<K, V> r = this, p; ; ) {
-                if ((p = r.parent) == null)
-                    return r;
-                r = p;
-            }
         }
 
         /**
@@ -1756,6 +1531,233 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
                     root.prev = null;
                 }
                 assert checkInvariants(root);
+            }
+        }
+
+        /**
+         * Tie-breaking utility for ordering insertions when equal
+         * hashCodes and non-comparable. We don't require a total
+         * order, just a consistent insertion rule to maintain
+         * equivalence across rebalancings. Tie-breaking further than
+         * necessary simplifies testing a bit.
+         */
+        static int tieBreakOrder(Object a, Object b) {
+            int d;
+            if (a == null || b == null ||
+                    (d = a.getClass().getName().
+                            compareTo(b.getClass().getName())) == 0)
+                d = (System.identityHashCode(a) <= System.identityHashCode(b) ?
+                        -1 : 1);
+            return d;
+        }
+
+        static <K, V> TreeNode<K, V> rotateLeft(TreeNode<K, V> root,
+                                                TreeNode<K, V> p) {
+            TreeNode<K, V> r, pp, rl;
+            if (p != null && (r = p.right) != null) {
+                if ((rl = p.right = r.left) != null)
+                    rl.parent = p;
+                if ((pp = r.parent = p.parent) == null)
+                    (root = r).red = false;
+                else if (pp.left == p)
+                    pp.left = r;
+                else
+                    pp.right = r;
+                r.left = p;
+                p.parent = r;
+            }
+            return root;
+        }
+
+        static <K, V> TreeNode<K, V> rotateRight(TreeNode<K, V> root,
+                                                 TreeNode<K, V> p) {
+            TreeNode<K, V> l, pp, lr;
+            if (p != null && (l = p.left) != null) {
+                if ((lr = p.left = l.right) != null)
+                    lr.parent = p;
+                if ((pp = l.parent = p.parent) == null)
+                    (root = l).red = false;
+                else if (pp.right == p)
+                    pp.right = l;
+                else
+                    pp.left = l;
+                l.right = p;
+                p.parent = l;
+            }
+            return root;
+        }
+
+        static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root,
+                                                      TreeNode<K, V> x) {
+            x.red = true;
+            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
+                if ((xp = x.parent) == null) {
+                    x.red = false;
+                    return x;
+                } else if (!xp.red || (xpp = xp.parent) == null)
+                    return root;
+                if (xp == (xppl = xpp.left)) {
+                    if ((xppr = xpp.right) != null && xppr.red) {
+                        xppr.red = false;
+                        xp.red = false;
+                        xpp.red = true;
+                        x = xpp;
+                    } else {
+                        if (x == xp.right) {
+                            root = rotateLeft(root, x = xp);
+                            xpp = (xp = x.parent) == null ? null : xp.parent;
+                        }
+                        if (xp != null) {
+                            xp.red = false;
+                            if (xpp != null) {
+                                xpp.red = true;
+                                root = rotateRight(root, xpp);
+                            }
+                        }
+                    }
+                } else {
+                    if (xppl != null && xppl.red) {
+                        xppl.red = false;
+                        xp.red = false;
+                        xpp.red = true;
+                        x = xpp;
+                    } else {
+                        if (x == xp.left) {
+                            root = rotateRight(root, x = xp);
+                            xpp = (xp = x.parent) == null ? null : xp.parent;
+                        }
+                        if (xp != null) {
+                            xp.red = false;
+                            if (xpp != null) {
+                                xpp.red = true;
+                                root = rotateLeft(root, xpp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        static <K, V> TreeNode<K, V> balanceDeletion(TreeNode<K, V> root,
+                                                     TreeNode<K, V> x) {
+            for (TreeNode<K, V> xp, xpl, xpr; ; ) {
+                if (x == null || x == root)
+                    return root;
+                else if ((xp = x.parent) == null) {
+                    x.red = false;
+                    return x;
+                } else if (x.red) {
+                    x.red = false;
+                    return root;
+                } else if ((xpl = xp.left) == x) {
+                    if ((xpr = xp.right) != null && xpr.red) {
+                        xpr.red = false;
+                        xp.red = true;
+                        root = rotateLeft(root, xp);
+                        xpr = (xp = x.parent) == null ? null : xp.right;
+                    }
+                    if (xpr == null)
+                        x = xp;
+                    else {
+                        TreeNode<K, V> sl = xpr.left, sr = xpr.right;
+                        if ((sr == null || !sr.red) &&
+                                (sl == null || !sl.red)) {
+                            xpr.red = true;
+                            x = xp;
+                        } else {
+                            if (sr == null || !sr.red) {
+                                if (sl != null)
+                                    sl.red = false;
+                                xpr.red = true;
+                                root = rotateRight(root, xpr);
+                                xpr = (xp = x.parent) == null ?
+                                        null : xp.right;
+                            }
+                            if (xpr != null) {
+                                xpr.red = (xp == null) ? false : xp.red;
+                                if ((sr = xpr.right) != null)
+                                    sr.red = false;
+                            }
+                            if (xp != null) {
+                                xp.red = false;
+                                root = rotateLeft(root, xp);
+                            }
+                            x = root;
+                        }
+                    }
+                } else { // symmetric
+                    if (xpl != null && xpl.red) {
+                        xpl.red = false;
+                        xp.red = true;
+                        root = rotateRight(root, xp);
+                        xpl = (xp = x.parent) == null ? null : xp.left;
+                    }
+                    if (xpl == null)
+                        x = xp;
+                    else {
+                        TreeNode<K, V> sl = xpl.left, sr = xpl.right;
+                        if ((sl == null || !sl.red) &&
+                                (sr == null || !sr.red)) {
+                            xpl.red = true;
+                            x = xp;
+                        } else {
+                            if (sl == null || !sl.red) {
+                                if (sr != null)
+                                    sr.red = false;
+                                xpl.red = true;
+                                root = rotateLeft(root, xpl);
+                                xpl = (xp = x.parent) == null ?
+                                        null : xp.left;
+                            }
+                            if (xpl != null) {
+                                xpl.red = (xp == null) ? false : xp.red;
+                                if ((sl = xpl.left) != null)
+                                    sl.red = false;
+                            }
+                            if (xp != null) {
+                                xp.red = false;
+                                root = rotateRight(root, xp);
+                            }
+                            x = root;
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Recursive invariant check
+         */
+        static <K, V> boolean checkInvariants(TreeNode<K, V> t) {
+            TreeNode<K, V> tp = t.parent, tl = t.left, tr = t.right,
+                    tb = t.prev, tn = (TreeNode<K, V>) t.next;
+            if (tb != null && tb.next != t)
+                return false;
+            if (tn != null && tn.prev != t)
+                return false;
+            if (tp != null && t != tp.left && t != tp.right)
+                return false;
+            if (tl != null && (tl.parent != t || tl.hash > t.hash))
+                return false;
+            if (tr != null && (tr.parent != t || tr.hash < t.hash))
+                return false;
+            if (t.red && tl != null && tl.red && tr != null && tr.red)
+                return false;
+            if (tl != null && !checkInvariants(tl))
+                return false;
+            if (tr != null && !checkInvariants(tr))
+                return false;
+            return true;
+        }
+
+        /**
+         * Returns root of tree containing this node.
+         */
+        final TreeNode<K, V> root() {
+            for (TreeNode<K, V> r = this, p; ; ) {
+                if ((p = r.parent) == null)
+                    return r;
+                r = p;
             }
         }
 
@@ -1799,22 +1801,8 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
             return ((parent != null) ? root() : this).find(h, k, null);
         }
 
-        /**
-         * Tie-breaking utility for ordering insertions when equal
-         * hashCodes and non-comparable. We don't require a total
-         * order, just a consistent insertion rule to maintain
-         * equivalence across rebalancings. Tie-breaking further than
-         * necessary simplifies testing a bit.
-         */
-        static int tieBreakOrder(Object a, Object b) {
-            int d;
-            if (a == null || b == null ||
-                    (d = a.getClass().getName().
-                            compareTo(b.getClass().getName())) == 0)
-                d = (System.identityHashCode(a) <= System.identityHashCode(b) ?
-                        -1 : 1);
-            return d;
-        }
+        /* ------------------------------------------------------------ */
+        // Red-black tree methods, all adapted from CLR
 
         /**
          * Forms tree of the nodes linked from this node.
@@ -2089,207 +2077,207 @@ public class MyHashMap<K, V> extends MyAbstractMap<K, V>
                 }
             }
         }
+    }
 
-        /* ------------------------------------------------------------ */
-        // Red-black tree methods, all adapted from CLR
-
-        static <K, V> TreeNode<K, V> rotateLeft(TreeNode<K, V> root,
-                                                TreeNode<K, V> p) {
-            TreeNode<K, V> r, pp, rl;
-            if (p != null && (r = p.right) != null) {
-                if ((rl = p.right = r.left) != null)
-                    rl.parent = p;
-                if ((pp = r.parent = p.parent) == null)
-                    (root = r).red = false;
-                else if (pp.left == p)
-                    pp.left = r;
-                else
-                    pp.right = r;
-                r.left = p;
-                p.parent = r;
-            }
-            return root;
+    final class KeySet extends AbstractSet<K> {
+        public final int size() {
+            return size;
         }
 
-        static <K, V> TreeNode<K, V> rotateRight(TreeNode<K, V> root,
-                                                 TreeNode<K, V> p) {
-            TreeNode<K, V> l, pp, lr;
-            if (p != null && (l = p.left) != null) {
-                if ((lr = p.left = l.right) != null)
-                    lr.parent = p;
-                if ((pp = l.parent = p.parent) == null)
-                    (root = l).red = false;
-                else if (pp.right == p)
-                    pp.right = l;
-                else
-                    pp.left = l;
-                l.right = p;
-                p.parent = l;
-            }
-            return root;
+        public final void clear() {
+            MyHashMap.this.clear();
         }
 
-        static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root,
-                                                      TreeNode<K, V> x) {
-            x.red = true;
-            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
-                if ((xp = x.parent) == null) {
-                    x.red = false;
-                    return x;
-                } else if (!xp.red || (xpp = xp.parent) == null)
-                    return root;
-                if (xp == (xppl = xpp.left)) {
-                    if ((xppr = xpp.right) != null && xppr.red) {
-                        xppr.red = false;
-                        xp.red = false;
-                        xpp.red = true;
-                        x = xpp;
-                    } else {
-                        if (x == xp.right) {
-                            root = rotateLeft(root, x = xp);
-                            xpp = (xp = x.parent) == null ? null : xp.parent;
-                        }
-                        if (xp != null) {
-                            xp.red = false;
-                            if (xpp != null) {
-                                xpp.red = true;
-                                root = rotateRight(root, xpp);
-                            }
-                        }
-                    }
-                } else {
-                    if (xppl != null && xppl.red) {
-                        xppl.red = false;
-                        xp.red = false;
-                        xpp.red = true;
-                        x = xpp;
-                    } else {
-                        if (x == xp.left) {
-                            root = rotateRight(root, x = xp);
-                            xpp = (xp = x.parent) == null ? null : xp.parent;
-                        }
-                        if (xp != null) {
-                            xp.red = false;
-                            if (xpp != null) {
-                                xpp.red = true;
-                                root = rotateLeft(root, xpp);
-                            }
-                        }
-                    }
+        public final Iterator<K> iterator() {
+            return new KeyIterator();
+        }
+
+        public final boolean contains(Object o) {
+            return containsKey(o);
+        }
+
+        public final boolean remove(Object key) {
+            return removeNode(hash(key), key, null, false, true) != null;
+        }
+
+        public final Spliterator<K> spliterator() {
+            return new KeySpliterator<>(MyHashMap.this, 0, -1, 0, 0);
+        }
+
+        public final void forEach(Consumer<? super K> action) {
+            Node<K, V>[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size > 0 && (tab = table) != null) {
+                int mc = modCount;
+                for (int i = 0; i < tab.length; ++i) {
+                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
+                        action.accept(e.key);
                 }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
             }
         }
+    }
 
-        static <K, V> TreeNode<K, V> balanceDeletion(TreeNode<K, V> root,
-                                                     TreeNode<K, V> x) {
-            for (TreeNode<K, V> xp, xpl, xpr; ; ) {
-                if (x == null || x == root)
-                    return root;
-                else if ((xp = x.parent) == null) {
-                    x.red = false;
-                    return x;
-                } else if (x.red) {
-                    x.red = false;
-                    return root;
-                } else if ((xpl = xp.left) == x) {
-                    if ((xpr = xp.right) != null && xpr.red) {
-                        xpr.red = false;
-                        xp.red = true;
-                        root = rotateLeft(root, xp);
-                        xpr = (xp = x.parent) == null ? null : xp.right;
-                    }
-                    if (xpr == null)
-                        x = xp;
-                    else {
-                        TreeNode<K, V> sl = xpr.left, sr = xpr.right;
-                        if ((sr == null || !sr.red) &&
-                                (sl == null || !sl.red)) {
-                            xpr.red = true;
-                            x = xp;
-                        } else {
-                            if (sr == null || !sr.red) {
-                                if (sl != null)
-                                    sl.red = false;
-                                xpr.red = true;
-                                root = rotateRight(root, xpr);
-                                xpr = (xp = x.parent) == null ?
-                                        null : xp.right;
-                            }
-                            if (xpr != null) {
-                                xpr.red = (xp == null) ? false : xp.red;
-                                if ((sr = xpr.right) != null)
-                                    sr.red = false;
-                            }
-                            if (xp != null) {
-                                xp.red = false;
-                                root = rotateLeft(root, xp);
-                            }
-                            x = root;
-                        }
-                    }
-                } else { // symmetric
-                    if (xpl != null && xpl.red) {
-                        xpl.red = false;
-                        xp.red = true;
-                        root = rotateRight(root, xp);
-                        xpl = (xp = x.parent) == null ? null : xp.left;
-                    }
-                    if (xpl == null)
-                        x = xp;
-                    else {
-                        TreeNode<K, V> sl = xpl.left, sr = xpl.right;
-                        if ((sl == null || !sl.red) &&
-                                (sr == null || !sr.red)) {
-                            xpl.red = true;
-                            x = xp;
-                        } else {
-                            if (sl == null || !sl.red) {
-                                if (sr != null)
-                                    sr.red = false;
-                                xpl.red = true;
-                                root = rotateLeft(root, xpl);
-                                xpl = (xp = x.parent) == null ?
-                                        null : xp.left;
-                            }
-                            if (xpl != null) {
-                                xpl.red = (xp == null) ? false : xp.red;
-                                if ((sl = xpl.left) != null)
-                                    sl.red = false;
-                            }
-                            if (xp != null) {
-                                xp.red = false;
-                                root = rotateRight(root, xp);
-                            }
-                            x = root;
-                        }
-                    }
+    final class Values extends AbstractCollection<V> {
+        public final int size() {
+            return size;
+        }
+
+        public final void clear() {
+            MyHashMap.this.clear();
+        }
+
+        public final Iterator<V> iterator() {
+            return new ValueIterator();
+        }
+
+        public final boolean contains(Object o) {
+            return containsValue(o);
+        }
+
+        public final Spliterator<V> spliterator() {
+            return new ValueSpliterator<>(MyHashMap.this, 0, -1, 0, 0);
+        }
+
+        public final void forEach(Consumer<? super V> action) {
+            Node<K, V>[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size > 0 && (tab = table) != null) {
+                int mc = modCount;
+                for (int i = 0; i < tab.length; ++i) {
+                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
+                        action.accept(e.value);
                 }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    final class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+        public final int size() {
+            return size;
+        }
+
+        public final void clear() {
+            MyHashMap.this.clear();
+        }
+
+        public final Iterator<Map.Entry<K, V>> iterator() {
+            return new EntryIterator();
+        }
+
+        public final boolean contains(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+            Object key = e.getKey();
+            Node<K, V> candidate = getNode(hash(key), key);
+            return candidate != null && candidate.equals(e);
+        }
+
+        public final boolean remove(Object o) {
+            if (o instanceof Map.Entry) {
+                Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+                Object key = e.getKey();
+                Object value = e.getValue();
+                return removeNode(hash(key), key, value, true, true) != null;
+            }
+            return false;
+        }
+
+        public final Spliterator<Map.Entry<K, V>> spliterator() {
+            return new EntrySpliterator<>(MyHashMap.this, 0, -1, 0, 0);
+        }
+
+        public final void forEach(Consumer<? super Map.Entry<K, V>> action) {
+            Node<K, V>[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size > 0 && (tab = table) != null) {
+                int mc = modCount;
+                for (int i = 0; i < tab.length; ++i) {
+                    for (Node<K, V> e = tab[i]; e != null; e = e.next)
+                        action.accept(e);
+                }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    abstract class HashIterator {
+        Node<K, V> next;        // next entry to return
+        Node<K, V> current;     // current entry
+        int expectedModCount;  // for fast-fail
+        int index;             // current slot
+
+        HashIterator() {
+            expectedModCount = modCount;
+            Node<K, V>[] t = table;
+            current = next = null;
+            index = 0;
+            if (t != null && size > 0) { // advance to first entry
+                do {
+                } while (index < t.length && (next = t[index++]) == null);
             }
         }
 
-        /**
-         * Recursive invariant check
-         */
-        static <K, V> boolean checkInvariants(TreeNode<K, V> t) {
-            TreeNode<K, V> tp = t.parent, tl = t.left, tr = t.right,
-                    tb = t.prev, tn = (TreeNode<K, V>) t.next;
-            if (tb != null && tb.next != t)
-                return false;
-            if (tn != null && tn.prev != t)
-                return false;
-            if (tp != null && t != tp.left && t != tp.right)
-                return false;
-            if (tl != null && (tl.parent != t || tl.hash > t.hash))
-                return false;
-            if (tr != null && (tr.parent != t || tr.hash < t.hash))
-                return false;
-            if (t.red && tl != null && tl.red && tr != null && tr.red)
-                return false;
-            if (tl != null && !checkInvariants(tl))
-                return false;
-            if (tr != null && !checkInvariants(tr))
-                return false;
-            return true;
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Node<K, V> nextNode() {
+            Node<K, V>[] t;
+            Node<K, V> e = next;
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            if (e == null)
+                throw new NoSuchElementException();
+            if ((next = (current = e).next) == null && (t = table) != null) {
+                do {
+                } while (index < t.length && (next = t[index++]) == null);
+            }
+            return e;
+        }
+
+        public final void remove() {
+            Node<K, V> p = current;
+            if (p == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            current = null;
+            K key = p.key;
+            removeNode(hash(key), key, null, false, false);
+            expectedModCount = modCount;
+        }
+    }
+
+    final class KeyIterator extends HashIterator
+            implements Iterator<K> {
+        public final K next() {
+            return nextNode().key;
+        }
+    }
+
+    final class ValueIterator extends HashIterator
+            implements Iterator<V> {
+        public final V next() {
+            return nextNode().value;
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    // Tree bins
+
+    final class EntryIterator extends HashIterator
+            implements Iterator<Map.Entry<K, V>> {
+        public final Map.Entry<K, V> next() {
+            return nextNode();
         }
     }
 

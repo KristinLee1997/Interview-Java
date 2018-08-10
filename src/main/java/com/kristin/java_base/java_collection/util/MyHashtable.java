@@ -16,15 +16,28 @@ public class MyHashtable<K, V>
         implements Map<K, V>, Cloneable, java.io.Serializable {
 
     /**
+     * use serialVersionUID from JDK 1.0.2 for interoperability
+     */
+    private static final long serialVersionUID = 1421746759512286392L;
+    /**
+     * The maximum size of array to allocate.
+     * Some VMs reserve some header words in an array.
+     * Attempts to allocate larger arrays may result in
+     * OutOfMemoryError: Requested array size exceeds VM limit
+     */
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+    // Types of Enumerations/Iterations
+    private static final int KEYS = 0;
+    private static final int VALUES = 1;
+    private static final int ENTRIES = 2;
+    /**
      * The hash table data.
      */
     private transient Entry<?, ?>[] table;
-
     /**
      * The total number of entries in the hash table.
      */
     private transient int count;
-
     /**
      * The table is rehashed when its size exceeds this threshold.  (The
      * value of this field is (int)(capacity * loadFactor).)
@@ -32,14 +45,12 @@ public class MyHashtable<K, V>
      * @serial
      */
     private int threshold;
-
     /**
      * The load factor for the hashtable.
      *
      * @serial
      */
     private float loadFactor;
-
     /**
      * The number of times this Hashtable has been structurally modified
      * Structural modifications are those that change the number of entries in
@@ -48,11 +59,14 @@ public class MyHashtable<K, V>
      * the Hashtable fail-fast.  (See ConcurrentModificationException).
      */
     private transient int modCount = 0;
-
     /**
-     * use serialVersionUID from JDK 1.0.2 for interoperability
+     * Each of these fields are initialized to contain an instance of the
+     * appropriate view the first time this view is requested.  The views are
+     * stateless, so there's no reason to create more than one of each.
      */
-    private static final long serialVersionUID = 1421746759512286392L;
+    private transient volatile Set<K> keySet;
+    private transient volatile Set<Map.Entry<K, V>> entrySet;
+    private transient volatile Collection<V> values;
 
     /**
      * Constructs a new, empty hashtable with the specified initial
@@ -257,14 +271,6 @@ public class MyHashtable<K, V>
     }
 
     /**
-     * The maximum size of array to allocate.
-     * Some VMs reserve some header words in an array.
-     * Attempts to allocate larger arrays may result in
-     * OutOfMemoryError: Requested array size exceeds VM limit
-     */
-    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
-
-    /**
      * Increases the capacity of and internally reorganizes this
      * hashtable, in order to accommodate and access its entries more
      * efficiently.  This method is called automatically when the
@@ -395,6 +401,8 @@ public class MyHashtable<K, V>
         return null;
     }
 
+    // Views
+
     /**
      * Copies all of the mappings from the specified map to this hashtable.
      * These mappings will replace any mappings that this hashtable had for any
@@ -479,7 +487,6 @@ public class MyHashtable<K, V>
         }
     }
 
-
     private <T> Enumeration<T> getEnumeration(int type) {
         if (count == 0) {
             return Collections.emptyEnumeration();
@@ -495,17 +502,6 @@ public class MyHashtable<K, V>
             return new Enumerator<>(type, true);
         }
     }
-
-    // Views
-
-    /**
-     * Each of these fields are initialized to contain an instance of the
-     * appropriate view the first time this view is requested.  The views are
-     * stateless, so there's no reason to create more than one of each.
-     */
-    private transient volatile Set<K> keySet;
-    private transient volatile Set<Map.Entry<K, V>> entrySet;
-    private transient volatile Collection<V> values;
 
     /**
      * Returns a {@link Set} view of the keys contained in this map.
@@ -526,28 +522,6 @@ public class MyHashtable<K, V>
 //        if (keySet == null)
 //            keySet = Collections.synchronizedSet(new KeySet(), this);
         return keySet;
-    }
-
-    private class KeySet extends AbstractSet<K> {
-        public Iterator<K> iterator() {
-            return getIterator(KEYS);
-        }
-
-        public int size() {
-            return count;
-        }
-
-        public boolean contains(Object o) {
-            return containsKey(o);
-        }
-
-        public boolean remove(Object o) {
-            return MyHashtable.this.remove(o) != null;
-        }
-
-        public void clear() {
-            MyHashtable.this.clear();
-        }
     }
 
     /**
@@ -572,66 +546,6 @@ public class MyHashtable<K, V>
         return entrySet;
     }
 
-    private class EntrySet extends AbstractSet<Map.Entry<K, V>> {
-        public Iterator<Map.Entry<K, V>> iterator() {
-            return getIterator(ENTRIES);
-        }
-
-        public boolean add(Map.Entry<K, V> o) {
-            return super.add(o);
-        }
-
-        public boolean contains(Object o) {
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) o;
-            Object key = entry.getKey();
-            Entry<?, ?>[] tab = table;
-            int hash = key.hashCode();
-            int index = (hash & 0x7FFFFFFF) % tab.length;
-
-            for (Entry<?, ?> e = tab[index]; e != null; e = e.next)
-                if (e.hash == hash && e.equals(entry))
-                    return true;
-            return false;
-        }
-
-        public boolean remove(Object o) {
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) o;
-            Object key = entry.getKey();
-            Entry<?, ?>[] tab = table;
-            int hash = key.hashCode();
-            int index = (hash & 0x7FFFFFFF) % tab.length;
-
-            @SuppressWarnings("unchecked")
-            Entry<K, V> e = (Entry<K, V>) tab[index];
-            for (Entry<K, V> prev = null; e != null; prev = e, e = e.next) {
-                if (e.hash == hash && e.equals(entry)) {
-                    modCount++;
-                    if (prev != null)
-                        prev.next = e.next;
-                    else
-                        tab[index] = e.next;
-
-                    count--;
-                    e.value = null;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int size() {
-            return count;
-        }
-
-        public void clear() {
-            MyHashtable.this.clear();
-        }
-    }
-
     /**
      * Returns a {@link Collection} view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are
@@ -652,24 +566,6 @@ public class MyHashtable<K, V>
 //            values = Collections.synchronizedCollection(new ValueCollection(),
 //                    this);
         return values;
-    }
-
-    private class ValueCollection extends AbstractCollection<V> {
-        public Iterator<V> iterator() {
-            return getIterator(VALUES);
-        }
-
-        public int size() {
-            return count;
-        }
-
-        public boolean contains(Object o) {
-            return containsValue(o);
-        }
-
-        public void clear() {
-            MyHashtable.this.clear();
-        }
     }
 
     // Comparison and hashing
@@ -1190,10 +1086,105 @@ public class MyHashtable<K, V>
         }
     }
 
-    // Types of Enumerations/Iterations
-    private static final int KEYS = 0;
-    private static final int VALUES = 1;
-    private static final int ENTRIES = 2;
+    private class KeySet extends AbstractSet<K> {
+        public Iterator<K> iterator() {
+            return getIterator(KEYS);
+        }
+
+        public int size() {
+            return count;
+        }
+
+        public boolean contains(Object o) {
+            return containsKey(o);
+        }
+
+        public boolean remove(Object o) {
+            return MyHashtable.this.remove(o) != null;
+        }
+
+        public void clear() {
+            MyHashtable.this.clear();
+        }
+    }
+
+    private class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+        public Iterator<Map.Entry<K, V>> iterator() {
+            return getIterator(ENTRIES);
+        }
+
+        public boolean add(Map.Entry<K, V> o) {
+            return super.add(o);
+        }
+
+        public boolean contains(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) o;
+            Object key = entry.getKey();
+            Entry<?, ?>[] tab = table;
+            int hash = key.hashCode();
+            int index = (hash & 0x7FFFFFFF) % tab.length;
+
+            for (Entry<?, ?> e = tab[index]; e != null; e = e.next)
+                if (e.hash == hash && e.equals(entry))
+                    return true;
+            return false;
+        }
+
+        public boolean remove(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) o;
+            Object key = entry.getKey();
+            Entry<?, ?>[] tab = table;
+            int hash = key.hashCode();
+            int index = (hash & 0x7FFFFFFF) % tab.length;
+
+            @SuppressWarnings("unchecked")
+            Entry<K, V> e = (Entry<K, V>) tab[index];
+            for (Entry<K, V> prev = null; e != null; prev = e, e = e.next) {
+                if (e.hash == hash && e.equals(entry)) {
+                    modCount++;
+                    if (prev != null)
+                        prev.next = e.next;
+                    else
+                        tab[index] = e.next;
+
+                    count--;
+                    e.value = null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int size() {
+            return count;
+        }
+
+        public void clear() {
+            MyHashtable.this.clear();
+        }
+    }
+
+    private class ValueCollection extends AbstractCollection<V> {
+        public Iterator<V> iterator() {
+            return getIterator(VALUES);
+        }
+
+        public int size() {
+            return count;
+        }
+
+        public boolean contains(Object o) {
+            return containsValue(o);
+        }
+
+        public void clear() {
+            MyHashtable.this.clear();
+        }
+    }
 
     /**
      * A hashtable enumerator class.  This class implements both the
@@ -1203,24 +1194,22 @@ public class MyHashtable<K, V>
      * by passing an Enumeration.
      */
     private class Enumerator<T> implements Enumeration<T>, Iterator<T> {
-        Entry<?, ?>[] table = MyHashtable.this.table;
-        int index = table.length;
-        Entry<?, ?> entry;
-        Entry<?, ?> lastReturned;
-        int type;
-
-        /**
-         * Indicates whether this Enumerator is serving as an Iterator
-         * or an Enumeration.  (true -> Iterator).
-         */
-        boolean iterator;
-
         /**
          * The modCount value that the iterator believes that the backing
          * Hashtable should have.  If this expectation is violated, the iterator
          * has detected concurrent modification.
          */
         protected int expectedModCount = modCount;
+        Entry<?, ?>[] table = MyHashtable.this.table;
+        int index = table.length;
+        Entry<?, ?> entry;
+        Entry<?, ?> lastReturned;
+        int type;
+        /**
+         * Indicates whether this Enumerator is serving as an Iterator
+         * or an Enumeration.  (true -> Iterator).
+         */
+        boolean iterator;
 
         Enumerator(int type, boolean iterator) {
             this.type = type;

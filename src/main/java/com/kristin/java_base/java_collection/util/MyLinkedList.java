@@ -12,15 +12,14 @@ import java.util.function.Consumer;
 public class MyLinkedList<E>
         extends AbstractSequentialList<E>
         implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
+    private static final long serialVersionUID = 876323262645176354L;
     transient int size = 0;
-
     /**
      * Pointer to first node.
      * Invariant: (first == null && last == null) ||
      * (first.prev == null && first.item != null)
      */
     transient Node<E> first;
-
     /**
      * Pointer to last node.
      * Invariant: (first == null && last == null) ||
@@ -369,6 +368,9 @@ public class MyLinkedList<E>
         return true;
     }
 
+
+    // Positional Access Operations
+
     /**
      * Removes all of the elements from this list.
      * The list will be empty after this call returns.
@@ -389,9 +391,6 @@ public class MyLinkedList<E>
         size = 0;
         modCount++;
     }
-
-
-    // Positional Access Operations
 
     /**
      * Returns the element at the specified position in this list.
@@ -488,6 +487,8 @@ public class MyLinkedList<E>
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
     }
 
+    // Search Operations
+
     /**
      * Returns the (non-null) Node at the specified element index.
      */
@@ -506,8 +507,6 @@ public class MyLinkedList<E>
             return x;
         }
     }
-
-    // Search Operations
 
     /**
      * Returns the index of the first occurrence of the specified element
@@ -538,6 +537,8 @@ public class MyLinkedList<E>
         return -1;
     }
 
+    // Queue operations.
+
     /**
      * Returns the index of the last occurrence of the specified element
      * in this list, or -1 if this list does not contain the element.
@@ -566,8 +567,6 @@ public class MyLinkedList<E>
         }
         return -1;
     }
-
-    // Queue operations.
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
@@ -613,6 +612,8 @@ public class MyLinkedList<E>
         return removeFirst();
     }
 
+    // Deque operations
+
     /**
      * Adds the specified element as the tail (last element) of this list.
      *
@@ -623,8 +624,6 @@ public class MyLinkedList<E>
     public boolean offer(E e) {
         return add(e);
     }
-
-    // Deque operations
 
     /**
      * Inserts the specified element at the front of this list.
@@ -797,141 +796,11 @@ public class MyLinkedList<E>
         return new ListItr(index);
     }
 
-    private class ListItr implements ListIterator<E> {
-        private Node<E> lastReturned;
-        private Node<E> next;
-        private int nextIndex;
-        private int expectedModCount = modCount;
-
-        ListItr(int index) {
-            // assert isPositionIndex(index);
-            next = (index == size) ? null : node(index);
-            nextIndex = index;
-        }
-
-        public boolean hasNext() {
-            return nextIndex < size;
-        }
-
-        public E next() {
-            checkForComodification();
-            if (!hasNext())
-                throw new NoSuchElementException();
-
-            lastReturned = next;
-            next = next.next;
-            nextIndex++;
-            return lastReturned.item;
-        }
-
-        public boolean hasPrevious() {
-            return nextIndex > 0;
-        }
-
-        public E previous() {
-            checkForComodification();
-            if (!hasPrevious())
-                throw new NoSuchElementException();
-
-            lastReturned = next = (next == null) ? last : next.prev;
-            nextIndex--;
-            return lastReturned.item;
-        }
-
-        public int nextIndex() {
-            return nextIndex;
-        }
-
-        public int previousIndex() {
-            return nextIndex - 1;
-        }
-
-        public void remove() {
-            checkForComodification();
-            if (lastReturned == null)
-                throw new IllegalStateException();
-
-            Node<E> lastNext = lastReturned.next;
-            unlink(lastReturned);
-            if (next == lastReturned)
-                next = lastNext;
-            else
-                nextIndex--;
-            lastReturned = null;
-            expectedModCount++;
-        }
-
-        public void set(E e) {
-            if (lastReturned == null)
-                throw new IllegalStateException();
-            checkForComodification();
-            lastReturned.item = e;
-        }
-
-        public void add(E e) {
-            checkForComodification();
-            lastReturned = null;
-            if (next == null)
-                linkLast(e);
-            else
-                linkBefore(e, next);
-            nextIndex++;
-            expectedModCount++;
-        }
-
-        public void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            while (modCount == expectedModCount && nextIndex < size) {
-                action.accept(next.item);
-                lastReturned = next;
-                next = next.next;
-                nextIndex++;
-            }
-            checkForComodification();
-        }
-
-        final void checkForComodification() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-    }
-
-    private static class Node<E> {
-        E item;
-        Node<E> next;
-        Node<E> prev;
-
-        Node(Node<E> prev, E element, Node<E> next) {
-            this.item = element;
-            this.next = next;
-            this.prev = prev;
-        }
-    }
-
     /**
      * @since 1.6
      */
     public Iterator<E> descendingIterator() {
         return new DescendingIterator();
-    }
-
-    /**
-     * Adapter to provide descending iterators via ListItr.previous
-     */
-    private class DescendingIterator implements Iterator<E> {
-        private final ListItr itr = new ListItr(size());
-
-        public boolean hasNext() {
-            return itr.hasPrevious();
-        }
-
-        public E next() {
-            return itr.previous();
-        }
-
-        public void remove() {
-            itr.remove();
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -1040,8 +909,6 @@ public class MyLinkedList<E>
         return a;
     }
 
-    private static final long serialVersionUID = 876323262645176354L;
-
     /**
      * Saves the state of this {@code LinkedList} instance to a stream
      * (that is, serializes it).
@@ -1099,6 +966,18 @@ public class MyLinkedList<E>
     public Spliterator<E> spliterator() {
 //        return new LLSpliterator<E>(this, -1, 0);
         return null;
+    }
+
+    private static class Node<E> {
+        E item;
+        Node<E> next;
+        Node<E> prev;
+
+        Node(Node<E> prev, E element, Node<E> next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
     }
 
     /**
@@ -1194,6 +1073,124 @@ public class MyLinkedList<E>
 
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
+        }
+    }
+
+    private class ListItr implements ListIterator<E> {
+        private Node<E> lastReturned;
+        private Node<E> next;
+        private int nextIndex;
+        private int expectedModCount = modCount;
+
+        ListItr(int index) {
+            // assert isPositionIndex(index);
+            next = (index == size) ? null : node(index);
+            nextIndex = index;
+        }
+
+        public boolean hasNext() {
+            return nextIndex < size;
+        }
+
+        public E next() {
+            checkForComodification();
+            if (!hasNext())
+                throw new NoSuchElementException();
+
+            lastReturned = next;
+            next = next.next;
+            nextIndex++;
+            return lastReturned.item;
+        }
+
+        public boolean hasPrevious() {
+            return nextIndex > 0;
+        }
+
+        public E previous() {
+            checkForComodification();
+            if (!hasPrevious())
+                throw new NoSuchElementException();
+
+            lastReturned = next = (next == null) ? last : next.prev;
+            nextIndex--;
+            return lastReturned.item;
+        }
+
+        public int nextIndex() {
+            return nextIndex;
+        }
+
+        public int previousIndex() {
+            return nextIndex - 1;
+        }
+
+        public void remove() {
+            checkForComodification();
+            if (lastReturned == null)
+                throw new IllegalStateException();
+
+            Node<E> lastNext = lastReturned.next;
+            unlink(lastReturned);
+            if (next == lastReturned)
+                next = lastNext;
+            else
+                nextIndex--;
+            lastReturned = null;
+            expectedModCount++;
+        }
+
+        public void set(E e) {
+            if (lastReturned == null)
+                throw new IllegalStateException();
+            checkForComodification();
+            lastReturned.item = e;
+        }
+
+        public void add(E e) {
+            checkForComodification();
+            lastReturned = null;
+            if (next == null)
+                linkLast(e);
+            else
+                linkBefore(e, next);
+            nextIndex++;
+            expectedModCount++;
+        }
+
+        public void forEachRemaining(Consumer<? super E> action) {
+            Objects.requireNonNull(action);
+            while (modCount == expectedModCount && nextIndex < size) {
+                action.accept(next.item);
+                lastReturned = next;
+                next = next.next;
+                nextIndex++;
+            }
+            checkForComodification();
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    /**
+     * Adapter to provide descending iterators via ListItr.previous
+     */
+    private class DescendingIterator implements Iterator<E> {
+        private final ListItr itr = new ListItr(size());
+
+        public boolean hasNext() {
+            return itr.hasPrevious();
+        }
+
+        public E next() {
+            return itr.previous();
+        }
+
+        public void remove() {
+            itr.remove();
         }
     }
 

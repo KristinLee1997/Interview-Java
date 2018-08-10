@@ -15,31 +15,28 @@ import java.util.function.UnaryOperator;
 public class MyCopyOnWriteArrayList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     private static final long serialVersionUID = 8673264195747942595L;
+    private static final sun.misc.Unsafe UNSAFE;
+    private static final long lockOffset;
+
+    static {
+        try {
+            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            Class<?> k = MyCopyOnWriteArrayList.class;
+            lockOffset = UNSAFE.objectFieldOffset
+                    (k.getDeclaredField("lock"));
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+    }
 
     /**
      * The lock protecting all mutators
      */
     final transient ReentrantLock lock = new ReentrantLock();
-
     /**
      * The array, accessed only via getArray/setArray.
      */
     private transient volatile Object[] array;
-
-    /**
-     * Gets the array.  Non-private so as to also be accessible
-     * from CopyOnWriteArraySet class.
-     */
-    final Object[] getArray() {
-        return array;
-    }
-
-    /**
-     * Sets the array.
-     */
-    final void setArray(Object[] a) {
-        array = a;
-    }
 
     /**
      * Creates an empty list.
@@ -78,24 +75,6 @@ public class MyCopyOnWriteArrayList<E>
      */
     public MyCopyOnWriteArrayList(E[] toCopyIn) {
         setArray(Arrays.copyOf(toCopyIn, toCopyIn.length, Object[].class));
-    }
-
-    /**
-     * Returns the number of elements in this list.
-     *
-     * @return the number of elements in this list
-     */
-    public int size() {
-        return getArray().length;
-    }
-
-    /**
-     * Returns {@code true} if this list contains no elements.
-     *
-     * @return {@code true} if this list contains no elements
-     */
-    public boolean isEmpty() {
-        return size() == 0;
     }
 
     /**
@@ -148,6 +127,39 @@ public class MyCopyOnWriteArrayList<E>
                     return i;
         }
         return -1;
+    }
+
+    /**
+     * Gets the array.  Non-private so as to also be accessible
+     * from CopyOnWriteArraySet class.
+     */
+    final Object[] getArray() {
+        return array;
+    }
+
+    /**
+     * Sets the array.
+     */
+    final void setArray(Object[] a) {
+        array = a;
+    }
+
+    /**
+     * Returns the number of elements in this list.
+     *
+     * @return the number of elements in this list
+     */
+    public int size() {
+        return getArray().length;
+    }
+
+    /**
+     * Returns {@code true} if this list contains no elements.
+     *
+     * @return {@code true} if this list contains no elements
+     */
+    public boolean isEmpty() {
+        return size() == 0;
     }
 
     /**
@@ -220,6 +232,8 @@ public class MyCopyOnWriteArrayList<E>
         Object[] elements = getArray();
         return lastIndexOf(e, elements, index);
     }
+
+    // Positional Access Operations
 
     /**
      * Returns a shallow copy of this list.  (The elements themselves
@@ -309,8 +323,6 @@ public class MyCopyOnWriteArrayList<E>
             return a;
         }
     }
-
-    // Positional Access Operations
 
     @SuppressWarnings("unchecked")
     private E get(Object[] a, int index) {
@@ -1057,6 +1069,40 @@ public class MyCopyOnWriteArrayList<E>
                 (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
+    /**
+     * Returns a view of the portion of this list between
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
+     * The returned list is backed by this list, so changes in the
+     * returned list are reflected in this list.
+     * <p>
+     * <p>The semantics of the list returned by this method become
+     * undefined if the backing list (i.e., this list) is modified in
+     * any way other than via the returned list.
+     *
+     * @param fromIndex low endpoint (inclusive) of the subList
+     * @param toIndex   high endpoint (exclusive) of the subList
+     * @return a view of the specified range within this list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    public List<E> subList(int fromIndex, int toIndex) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            Object[] elements = getArray();
+            int len = elements.length;
+            if (fromIndex < 0 || toIndex > len || fromIndex > toIndex)
+                throw new IndexOutOfBoundsException();
+            return new COWSubList<E>(this, fromIndex, toIndex);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // Support for resetting lock while deserializing
+    private void resetLock() {
+        UNSAFE.putObjectVolatile(this, lockOffset, new ReentrantLock());
+    }
+
     static final class COWIterator<E> implements ListIterator<E> {
         /**
          * Snapshot of the array
@@ -1142,35 +1188,6 @@ public class MyCopyOnWriteArrayList<E>
                 action.accept(e);
             }
             cursor = size;
-        }
-    }
-
-    /**
-     * Returns a view of the portion of this list between
-     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
-     * The returned list is backed by this list, so changes in the
-     * returned list are reflected in this list.
-     * <p>
-     * <p>The semantics of the list returned by this method become
-     * undefined if the backing list (i.e., this list) is modified in
-     * any way other than via the returned list.
-     *
-     * @param fromIndex low endpoint (inclusive) of the subList
-     * @param toIndex   high endpoint (exclusive) of the subList
-     * @return a view of the specified range within this list
-     * @throws IndexOutOfBoundsException {@inheritDoc}
-     */
-    public List<E> subList(int fromIndex, int toIndex) {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            Object[] elements = getArray();
-            int len = elements.length;
-            if (fromIndex < 0 || toIndex > len || fromIndex > toIndex)
-                throw new IndexOutOfBoundsException();
-            return new COWSubList<E>(this, fromIndex, toIndex);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -1601,25 +1618,6 @@ public class MyCopyOnWriteArrayList<E>
             while (nextIndex() < s) {
                 action.accept(i.next());
             }
-        }
-    }
-
-    // Support for resetting lock while deserializing
-    private void resetLock() {
-        UNSAFE.putObjectVolatile(this, lockOffset, new ReentrantLock());
-    }
-
-    private static final sun.misc.Unsafe UNSAFE;
-    private static final long lockOffset;
-
-    static {
-        try {
-            UNSAFE = sun.misc.Unsafe.getUnsafe();
-            Class<?> k = MyCopyOnWriteArrayList.class;
-            lockOffset = UNSAFE.objectFieldOffset
-                    (k.getDeclaredField("lock"));
-        } catch (Exception e) {
-            throw new Error(e);
         }
     }
 }
