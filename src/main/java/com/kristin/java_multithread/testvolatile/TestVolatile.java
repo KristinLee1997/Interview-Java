@@ -1,13 +1,15 @@
-package com.kristin;
+package com.kristin.java_multithread.testvolatile;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Kristin
- * @since 2018/7/27 23:09
+ * @since 2018/8/13 15:37
  **/
-public class Test {
+public class TestVolatile {
     public volatile Singleton singleton;
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void test() {
         singleton = new Singleton();
     }
