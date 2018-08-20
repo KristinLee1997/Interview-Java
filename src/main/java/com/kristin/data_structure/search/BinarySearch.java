@@ -27,7 +27,7 @@ public class BinarySearch {
             System.out.print(arr[i] + " ");
         }
         System.out.println();
-        int res = test(arr, 8);
+        int res = test(arr, 7);
         System.out.println(res);
     }
 }
