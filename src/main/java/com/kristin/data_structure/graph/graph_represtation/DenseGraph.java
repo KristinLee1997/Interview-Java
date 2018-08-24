@@ -1,4 +1,4 @@
-package com.kristin.structure.graph.graph_represtation;
+package com.kristin.data_structure.graph.graph_represtation;
 
 /**
  * @author Kristin
