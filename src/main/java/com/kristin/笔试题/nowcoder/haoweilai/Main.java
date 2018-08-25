@@ -1,6 +1,12 @@
 package com.kristin.笔试题.nowcoder.haoweilai;
 
+import org.junit.jupiter.api.Test;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 /**
@@ -8,20 +14,47 @@ import java.util.Scanner;
  */
 public class Main {
     public static void main(String[] args) {
-        Scanner scan = new Scanner(System.in);
-        String str = scan.nextLine();
-        String[] strArr = str.split(" ");
+        // 方法一
+//        Scanner scan = new Scanner(System.in);
+//        String str = scan.nextLine();
+//        String[] strArr = str.split(" ");
+//        int k = Integer.parseInt(strArr[strArr.length - 1]);
+//        int[] arr = new int[strArr.length - 1];
+//        for (int i = 0; i < arr.length; i++) {
+//            arr[i] = Integer.parseInt(strArr[i]);
+//        }
+//        int[] heap = getKMin(arr, k);
+//        Arrays.sort(heap);
+//        for (int i = 0; i < k - 1; i++) {
+//            System.out.print(heap[i] + " ");
+//        }
+//        System.out.println(heap[k - 1]);
+
+        //方法二
+        // 不用Sacnner读,因为当时间限制100ms时,Scanner读就会消耗很多时间,所以使用io读
+        // IO读之后一定要记得关闭io流
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String[] strArr = new String[0];
+        try {
+            strArr = reader.readLine().trim().split(" ");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         int k = Integer.parseInt(strArr[strArr.length - 1]);
-        int[] arr = new int[strArr.length - 1];
-        for (int i = 0; i < arr.length; i++) {
-            arr[i] = Integer.parseInt(strArr[i]);
+        PriorityQueue<Integer> queue = new PriorityQueue<>();
+        for (int i = 0; i < strArr.length - 1; i++) {
+            queue.add(Integer.parseInt(strArr[i]));
         }
-        int[] heap = getKMin(arr, k);
-        Arrays.sort(heap);
         for (int i = 0; i < k - 1; i++) {
-            System.out.print(heap[i] + " ");
+            System.out.print(queue.poll() + " ");
         }
-        System.out.println(heap[k - 1]);
+        System.out.println(queue.poll());
     }
 
     public static int[] getKMin(int[] arr, int k) {
