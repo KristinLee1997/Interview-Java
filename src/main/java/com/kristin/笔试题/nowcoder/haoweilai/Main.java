@@ -1,13 +1,9 @@
 package com.kristin.笔试题.nowcoder.haoweilai;
 
-import org.junit.jupiter.api.Test;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.PriorityQueue;
-import java.util.Scanner;
 
 /**
  * 按照升序输出n个数中最小的k个数
@@ -39,7 +35,7 @@ public class Main {
             strArr = reader.readLine().trim().split(" ");
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 reader.close();
             } catch (IOException e) {

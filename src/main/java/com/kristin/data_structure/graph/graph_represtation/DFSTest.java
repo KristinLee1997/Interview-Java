@@ -9,6 +9,7 @@ import java.util.LinkedList;
  **/
 public class DFSTest {
     private static int count = 0;
+
     public static void main(String[] args) {
         LinkedList<Character> lists = new LinkedList<Character>();
         lists.add('w');
@@ -50,9 +51,11 @@ public class DFSTest {
         HashMap<Character, Boolean> visited = new HashMap<Character, Boolean>();
         dfs(graph, visited);
     }
+
     private static void dfs(HashMap<Character, LinkedList<Character>> graph, HashMap<Character, Boolean> visited) {
-        visit(graph,visited,'s');
+        visit(graph, visited, 's');
     }
+
     private static void visit(HashMap<Character, LinkedList<Character>> graph, HashMap<Character, Boolean> visited,
                               char start) {
         if (!visited.containsKey(start)) {

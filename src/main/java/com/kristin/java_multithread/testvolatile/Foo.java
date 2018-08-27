@@ -8,9 +8,13 @@ public class Foo {
 
     private volatile Bar bar = null;
 
+    public static void main(String[] args) throws Exception {
+        System.out.println(new Foo().getBar());
+    }
+
     public Bar getBar() {
         if (bar == null) {
-            synchronized(this) {
+            synchronized (this) {
                 if (bar == null) {
                     bar = new Bar();
                 }
@@ -18,12 +22,8 @@ public class Foo {
         }
         return bar;
     }
-
-    public static void main(String[] args) throws Exception{
-        System.out.println(new Foo().getBar());
-    }
 }
 
-class Bar{
+class Bar {
 
 }

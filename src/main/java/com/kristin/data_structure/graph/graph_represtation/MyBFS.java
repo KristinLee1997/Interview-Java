@@ -31,7 +31,7 @@ public class MyBFS {
         sortedMap.put(start, 0);
         while (!queue.isEmpty()) {
             Character top = queue.poll();
-            System.out.println(top +"   "+sortedMap.get(top));
+            System.out.println(top + "   " + sortedMap.get(top));
             int d = sortedMap.get(top) + 1;
             for (Character c : map.get(top)) {
                 if (!sortedMap.containsKey(c)) {

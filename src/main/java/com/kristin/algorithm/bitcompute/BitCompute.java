@@ -5,13 +5,20 @@ package com.kristin.algorithm.bitcompute;
  * @since 2018/8/11 7:07
  **/
 public class BitCompute {
+    public static void main(String[] args) {
+        BitCompute bitCompute = new BitCompute();
+        int a = -5;
+        int b = -7;
+        int res = bitCompute.getMax(a, b);
+        System.out.println(res);
+    }
+
     public void exg(int a, int b) {
         a = a ^ b;
         b = a ^ b;
         a = a ^ b;
         System.out.println(a + " " + b);
     }
-
 
     public int getMax(int a, int b) {
         int c = a - b;
@@ -40,13 +47,5 @@ public class BitCompute {
      */
     private int flip(int n) {
         return n ^ 1;
-    }
-
-    public static void main(String[] args) {
-        BitCompute bitCompute = new BitCompute();
-        int a = -5;
-        int b = -7;
-        int res = bitCompute.getMax(a, b);
-        System.out.println(res);
     }
 }

@@ -51,6 +51,7 @@ public class BFSTest {
         char start = 's';
         bfs(graph, dist, start);
     }
+
     private static void bfs(HashMap<Character, LinkedList<Character>> graph, HashMap<Character, Integer> dist,
                             char start) {
         Queue<Character> queue = new LinkedList<Character>();

@@ -28,7 +28,7 @@ public class Main2 {
             if (map.get(arr[i]) == null) {
                 map.put(arr[i], 1);
             } else {
-                map.put(arr[i], map.get(arr[i])+1);
+                map.put(arr[i], map.get(arr[i]) + 1);
             }
         }
         for (Map.Entry entry : map.entrySet()) {
