@@ -1,4 +1,7 @@
-package com.kristin.java_multithread.philosophers.dead;
+package com.kristin.java_multithread.philosophers.method1;
+
+import com.kristin.java_multithread.philosophers.dead.Chopstick;
+import com.kristin.java_multithread.philosophers.dead.Philosopher;
 
 /**
  * @author Kristin
