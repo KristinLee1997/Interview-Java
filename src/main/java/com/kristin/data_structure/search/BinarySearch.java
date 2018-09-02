@@ -5,7 +5,7 @@ package com.kristin.data_structure.search;
  * @since 2018/8/20 8:03
  **/
 public class BinarySearch {
-    public static int test(int[] arr, int target) {
+    public static int search(int[] arr, int target) {
         int l = 0, r = arr.length - 1;
         while (l <= r) {
             int mid = l + (r - l) / 2;
@@ -27,7 +27,7 @@ public class BinarySearch {
             System.out.print(arr[i] + " ");
         }
         System.out.println();
-        int res = test(arr, 7);
+        int res = search(arr, 7);
         System.out.println(res);
     }
 }
