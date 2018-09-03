@@ -23,7 +23,7 @@ public class QucikSort {
     private static int position(int[] arr, int l, int r) {
         TestHelper.swap(arr, l, (int) Math.random() * (r - l + 1) + l);
         int temp = arr[l];
-        int i = l , j = r;
+        int i = l, j = r;
         while (i < j) {
             while (i < j && temp < arr[j]) {
                 j--;
