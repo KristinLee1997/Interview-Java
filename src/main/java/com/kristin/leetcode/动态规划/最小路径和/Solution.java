@@ -5,6 +5,11 @@ package com.kristin.leetcode.动态规划.最小路径和;
  * @since 2018/8/30 22:13
  **/
 public class Solution {
+    public static void main(String[] args) {
+        int[][] num = new int[][]{{1, 3, 1}, {1, 5, 1}, {4, 2, 1}};
+        System.out.println(new Solution().minPathSum(num));
+    }
+
     public int minPathSum(int[][] grid) {
         int[][] dp = new int[grid.length][grid[0].length];
         int sum1 = 0;
@@ -23,10 +28,5 @@ public class Solution {
             }
         }
         return dp[grid.length - 1][grid[0].length - 1];
-    }
-
-    public static void main(String[] args) {
-        int[][] num = new int[][]{{1, 3, 1}, {1, 5, 1}, {4, 2, 1}};
-        System.out.println(new Solution().minPathSum(num));
     }
 }

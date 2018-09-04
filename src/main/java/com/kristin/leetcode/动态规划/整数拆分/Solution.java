@@ -5,6 +5,10 @@ package com.kristin.leetcode.动态规划.整数拆分;
  * @since 2018/8/31 8:56
  **/
 public class Solution {
+    public static void main(String[] args) {
+        System.out.println(new Solution().integerBreak(6));
+    }
+
     public int integerBreak(int n) {
         if (n <= 3) {
             return n - 1;
@@ -16,9 +20,5 @@ public class Solution {
             dp[i] = Math.max(dp[i - 2] * 2, dp[i - 3] * 3);
         }
         return dp[n];
-    }
-
-    public static void main(String[] args) {
-        System.out.println(new Solution().integerBreak(6));
     }
 }

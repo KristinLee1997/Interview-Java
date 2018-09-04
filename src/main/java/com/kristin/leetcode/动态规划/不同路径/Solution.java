@@ -5,6 +5,11 @@ package com.kristin.leetcode.动态规划.不同路径;
  * @since 2018/8/31 20:36
  **/
 public class Solution {
+    public static void main(String[] args) {
+        int res = new Solution().uniquePaths(3, 2);
+        System.out.println(res);
+    }
+
     public int uniquePaths(int m, int n) {
         int[][] dp = new int[m][n];
         for (int i = 0; i < dp.length; i++) {
@@ -19,10 +24,5 @@ public class Solution {
             }
         }
         return dp[m - 1][n - 1];
-    }
-
-    public static void main(String[] args) {
-        int res = new Solution().uniquePaths(3, 2);
-        System.out.println(res);
     }
 }

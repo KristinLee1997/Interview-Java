@@ -10,8 +10,8 @@ public class Solution {
         for (int i = 0; i < bills.length; i++) {
             if (!getMoney(bills[i], money)) {
                 System.out.println(i);
-                for(int j=0;j<money.length;j++){
-                    System.out.print(money[j]+" ");
+                for (int j = 0; j < money.length; j++) {
+                    System.out.print(money[j] + " ");
                 }
                 return false;
             }

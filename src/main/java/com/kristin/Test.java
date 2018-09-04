@@ -7,5 +7,7 @@ package com.kristin;
  **/
 
 public class Test {
+    public static void main(String[] args) {
 
+    }
 }

@@ -11,10 +11,12 @@ public class Philosopher extends Thread {
     private Random random;
 
     public Philosopher(Chopstick left, Chopstick right) {
-        if(left.getId() < right.getId()) {
-            first = left; second = right;
+        if (left.getId() < right.getId()) {
+            first = left;
+            second = right;
         } else {
-            first = right; second = left;
+            first = right;
+            second = left;
         }
         random = new Random();
     }
@@ -22,15 +24,16 @@ public class Philosopher extends Thread {
     @Override
     public void run() {
         try {
-            while(true) {
+            while (true) {
                 Thread.sleep(random.nextInt(1000));     // Think for a while
-                synchronized(first) {                   // Grab first chopstick
-                    synchronized(second) {                // Grab second chopstick
+                synchronized (first) {                   // Grab first chopstick
+                    synchronized (second) {                // Grab second chopstick
                         Thread.sleep(random.nextInt(1000)); // Eat for a while
                         System.out.println("Philosopher " + this + " eating");
                     }
                 }
             }
-        } catch(InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
     }
 }

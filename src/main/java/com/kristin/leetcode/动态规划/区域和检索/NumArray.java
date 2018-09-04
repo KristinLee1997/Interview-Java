@@ -14,15 +14,15 @@ class NumArray {
         }
     }
 
-    public int sumRange(int i, int j) {
-        return i == 0 ? this.sums[j] : (this.sums[j] - this.sums[i - 1]);
-    }
-
     public static void main(String[] args) {
         int[] nums = new int[]{-2, 0, 3, -5, 2, -1};
         NumArray obj = new NumArray(nums);
         int res = obj.sumRange(0, 2);
         System.out.println(res);
+    }
+
+    public int sumRange(int i, int j) {
+        return i == 0 ? this.sums[j] : (this.sums[j] - this.sums[i - 1]);
     }
 }
 
