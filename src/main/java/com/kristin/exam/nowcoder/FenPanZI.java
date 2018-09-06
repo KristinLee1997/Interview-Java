@@ -1,4 +1,4 @@
-package com.kristin.笔试题.nowcoder;
+package com.kristin.exam.nowcoder;
 
 import java.util.Scanner;
 

@@ -1,34 +1,36 @@
-package com.kristin.笔试题.beike;
+package com.kristin.exam.beike;
 
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
-public class Main3 {
+public class Main2 {
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
         int n = scan.nextInt();
         int[] numa = new int[n];
         int[] demo = new int[n];
-        int[] res = new int[n];
-        HashMap map = new HashMap();
-        HashMap shunxu = new HashMap();
+        Map map = new HashMap<>();
+        Map shunxu = new HashMap();
         for (int i = 0; i < n; i++) {
             int a = scan.nextInt();
             numa[i] = a;
             demo[i] = a;
             int b = scan.nextInt();
             map.put(a, b);
-            shunxu.put(a, i);
+            shunxu.put(a, i + 1);
         }
         Arrays.sort(numa);
+        int[] res = new int[n];
         for (int i = 0; i < n; i++) {
             res[i] = (int) map.get(numa[i]);
         }
         for (int i = 0; i < n; i++) {
-            System.out.print(getPos(res, (int) shunxu.get(demo[i])) + " ");
+            System.out.print(getPos(res, i) + " ");
         }
+        System.out.println();
     }
 
     public static int getPos(int[] arr, int pos) {

@@ -1,4 +1,4 @@
-package com.kristin.笔试题.keep;
+package com.kristin.exam.keep;
 
 import java.util.Scanner;
 

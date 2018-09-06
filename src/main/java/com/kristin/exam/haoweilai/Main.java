@@ -1,4 +1,4 @@
-package com.kristin.笔试题.haoweilai;
+package com.kristin.exam.haoweilai;
 
 
 import java.io.BufferedReader;

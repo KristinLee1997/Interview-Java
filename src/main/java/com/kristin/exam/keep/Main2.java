@@ -1,8 +1,8 @@
-package com.kristin.笔试题.meituan;
+package com.kristin.exam.keep;
 
 /**
  * @author Kristin
- * @since 2018/9/6 18:40
+ * @since 2018/8/23 22:07
  **/
 public class Main2 {
     public static void main(String[] args) {

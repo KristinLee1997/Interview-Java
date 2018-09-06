@@ -1,4 +1,4 @@
-package com.kristin.笔试题.baidu;
+package com.kristin.exam.baidu;
 
 import java.util.Arrays;
 import java.util.Scanner;

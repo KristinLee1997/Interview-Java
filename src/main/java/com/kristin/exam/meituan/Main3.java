@@ -1,4 +1,4 @@
-package com.kristin.笔试题.meituan;
+package com.kristin.exam.meituan;
 
 /**
  * @author Kristin

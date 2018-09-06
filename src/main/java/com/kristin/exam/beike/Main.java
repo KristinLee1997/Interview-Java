@@ -1,4 +1,4 @@
-package com.kristin.笔试题.beike;
+package com.kristin.exam.beike;
 
 
 import java.io.BufferedReader;
