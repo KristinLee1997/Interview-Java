@@ -186,8 +186,23 @@ public class DateTest {
         return Date.from(d.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    public static void getDateStartAndEnd() {
+        Date date = new Date();
+        LocalDateTime dateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        Date startTime = Date.from(dateTime.with(LocalTime.of(0, 0, 0))
+                .atZone(ZoneId.systemDefault()).toInstant());
+        Date endTime = Date.from(dateTime.plusDays(1).with(LocalTime.of(0, 0, 0)).minusSeconds(1)
+                .atZone(ZoneId.systemDefault()).toInstant());
+        System.out.println(startTime);
+        System.out.println(endTime);
+    }
+
+    public static void getStringStartAndEnd() {
+        
+    }
+
     public static void main(String[] args) {
-        System.out.println(DateTest.localDateToDate(LocalDateTime.now()));
+        DateTest.getDateStartAndEnd();
     }
 }
 

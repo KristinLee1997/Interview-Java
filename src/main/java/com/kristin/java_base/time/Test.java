@@ -8,9 +8,14 @@ import java.time.temporal.ChronoUnit;
 public class Test {
     public static void main(String[] args) {
         Date date = Date.from(LocalDate.now().
-                minus(1, ChronoUnit.DAYS).
                 atTime(0, 0, 0).
                 atZone(ZoneId.systemDefault()).toInstant());
+        Date date2 = Date.from(LocalDate.now().
+                atTime(23, 59, 59).
+                atZone(ZoneId.systemDefault()).toInstant());
+
         System.out.println(date);
+        System.out.println(date2);
+
     }
 }
