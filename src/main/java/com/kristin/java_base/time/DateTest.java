@@ -177,7 +177,7 @@ public class DateTest {
         //对日期进行格式化，转换成字符串
         System.out.println("对日期进行格式化，转换成字符串");
         LocalDateTime localDateTime = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MM dd yyyy HH:mm a");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         String landing = localDateTime.format(dateTimeFormatter);
         System.out.println(localDateTime + " " + landing);
     }
